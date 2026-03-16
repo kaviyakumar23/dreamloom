@@ -1,0 +1,46 @@
+server {
+    listen 8080;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # SPA routing
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # WebSocket proxy to backend
+    location /ws {
+        proxy_pass ${BACKEND_URL};
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_read_timeout 86400;
+    }
+
+    # API proxy to backend
+    location /api/ {
+        proxy_pass ${BACKEND_URL};
+        proxy_set_header Host $host;
+        proxy_read_timeout 120;
+    }
+
+    # Media proxy to backend
+    location /media/ {
+        proxy_pass ${BACKEND_URL};
+        proxy_set_header Host $host;
+    }
+
+    # Bundled audio assets
+    location /audio/ {
+        alias /usr/share/nginx/html/audio/;
+        expires 7d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Health check
+    location /nginx-health {
+        return 200 'ok';
+        add_header Content-Type text/plain;
+    }
+}
