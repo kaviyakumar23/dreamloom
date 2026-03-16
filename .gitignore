@@ -38,3 +38,8 @@ media_assets/
 
 # Logs
 *.log
+
+docs/
+CLAUDE.md
+CREDITS.md
+DEMO_SCRIPT.md
