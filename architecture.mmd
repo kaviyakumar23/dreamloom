@@ -1,0 +1,107 @@
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#7c3aed', 'primaryTextColor': '#f5f5f5', 'primaryBorderColor': '#a78bfa', 'lineColor': '#a78bfa', 'secondaryColor': '#1e1b4b', 'tertiaryColor': '#312e81'}}}%%
+graph LR
+
+    %% FRONTEND
+    subgraph FE["Frontend · React + Vite"]
+        direction TB
+        IN["User Input<br/>Audio · Camera · Text"]
+        UI["Story UI<br/>Canvas · Playback · Story Bible"]
+        OUT["Exports & Gallery<br/>Director's Cut · PDF/ZIP · Publish"]
+        DBG["Debug Panel"]
+    end
+
+    %% TRANSPORT
+    WS_LINK["WebSocket Transport<br/>Bidi audio + JSON events"]
+
+    %% BACKEND
+    subgraph BE["Backend · FastAPI on Cloud Run"]
+        direction TB
+
+        subgraph API["Endpoints"]
+            WS["/ws<br/>Realtime session stream"]
+            TTS["/api/tts"]
+            REST["/api/gallery · /api/sessions"]
+        end
+
+        subgraph AGENT["Agent Layer"]
+            RUNNER["ADK Runner"]
+            LOOM["Director Agent · Loom"]
+            TOOLS["Tools<br/>Scene · Music · Director's Cut · Story Context"]
+        end
+
+        subgraph SVC["Services"]
+            SCENE["Scene Generator"]
+            MUSIC["Music Generator"]
+            SESSION["Story Session State"]
+            MEDIA["Media Handler"]
+            STORE["Persistence Layer"]
+        end
+
+        RECOVERY["Reconnect & Interrupt Guard"]
+    end
+
+    %% MODELS
+    subgraph MODELS["Google AI Models"]
+        LIVE["Gemini Live API<br/>Realtime voice"]
+        IMG["Gemini Flash Image<br/>Interleaved text + image"]
+        LYRIA["Lyria Realtime<br/>Music"]
+        TTSM["Gemini TTS"]
+        FLASH["Gemini Flash<br/>Reconnect transcription"]
+    end
+
+    %% STORAGE
+    subgraph DATA["Cloud Storage"]
+        GCS["GCS<br/>Images · Music · Audio"]
+        FS["Firestore<br/>Sessions · Published stories"]
+        AR["Artifact Registry"]
+    end
+
+    %% MAIN FLOW
+    IN --> WS_LINK
+    WS_LINK --> WS
+
+    WS <--> RUNNER
+    RUNNER <--> LOOM
+    LOOM --> TOOLS
+
+    TOOLS --> SCENE
+    TOOLS --> MUSIC
+    TOOLS --> SESSION
+
+    SCENE --> IMG
+    MUSIC --> LYRIA
+    TTS --> TTSM
+    RECOVERY --> FLASH
+    RUNNER --> LIVE
+
+    %% RESPONSE FLOW
+    WS --> WS_LINK
+    WS_LINK --> UI
+    WS_LINK --> OUT
+    WS_LINK --> DBG
+
+    %% PERSISTENCE
+    SCENE --> MEDIA
+    MUSIC --> MEDIA
+    MEDIA --> GCS
+
+    STORE --> FS
+    REST --> STORE
+    WS --> STORE
+
+    AR -. deploy .-> BE
+
+    %% STYLES
+    classDef frontend fill:#1e1b4b,stroke:#a78bfa,color:#f5f5f5
+    classDef transport fill:#4c1d95,stroke:#c4b5fd,color:#f5f5f5,stroke-width:2px
+    classDef backend fill:#312e81,stroke:#7c3aed,color:#f5f5f5
+    classDef models fill:#7c2d12,stroke:#f97316,color:#f5f5f5
+    classDef storage fill:#064e3b,stroke:#10b981,color:#f5f5f5
+    classDef retry fill:#78350f,stroke:#fbbf24,color:#f5f5f5
+
+    class IN,UI,OUT,DBG frontend
+    class WS_LINK transport
+    class WS,TTS,REST,RUNNER,LOOM,TOOLS,SCENE,MUSIC,SESSION,MEDIA,STORE backend
+    class LIVE,IMG,LYRIA,TTSM,FLASH models
+    class GCS,FS,AR storage
+    class RECOVERY retry
