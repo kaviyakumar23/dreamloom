@@ -1,6 +1,6 @@
 /**
- * StatusBar — cinematic top bar with connection status, kid-safe toggle, and story bible toggle.
- * Uses Cormorant Garamond display + Outfit body fonts, warm gold palette.
+ * StatusBar — top bar with connection status, kid-safe toggle, and story bible toggle.
+ * Restyled to match the landing page's teal/coral visual language.
  */
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -40,9 +40,9 @@ export function StatusBar({
     ConnectionStatus,
     { color: string; label: string }
   > = {
-    disconnected: { color: "bg-gray-400", label: "Disconnected" },
+    disconnected: { color: "bg-slate-400", label: "Disconnected" },
     connecting: { color: "bg-dreamloom-gold", label: "Connecting..." },
-    connected: { color: "bg-green-400", label: "Connected" },
+    connected: { color: "bg-[#20a09d]", label: "Connected" },
     reconnecting: { color: "bg-dreamloom-gold", label: "Reconnecting..." },
     error: { color: "bg-red-400", label: "Error" },
   };
@@ -50,18 +50,21 @@ export function StatusBar({
   const { color, label } = statusConfig[connectionStatus];
 
   return (
-    <div role="banner" className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-dreamloom-surface/80 px-3 sm:px-6 py-2 sm:py-3 backdrop-blur-md">
+    <div
+      role="banner"
+      className="flex flex-wrap items-center justify-between gap-2 border-b border-[#9fc7c3]/55 bg-[#f5fbfa]/82 px-3 py-2 backdrop-blur-md sm:px-6 sm:py-3"
+    >
       {/* Logo */}
       <div className="flex items-center gap-2 sm:gap-3">
-        <h1 className="font-display text-xl sm:text-2xl font-bold">
-          <span className="bg-gradient-to-r from-white to-[#d4c4a8] bg-clip-text text-transparent">
+        <h1 className="font-display text-xl font-semibold tracking-[-0.01em] sm:text-2xl">
+          <span className="bg-gradient-to-r from-[#1c4b5d] to-[#2d6774] bg-clip-text text-transparent">
             Dream
           </span>
-          <span className="bg-gradient-to-r from-dreamloom-gold to-[#d4a843] bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[#1f8f9b] via-[#27b1b2] to-[#e2864c] bg-clip-text text-transparent">
             Loom
           </span>
         </h1>
-        <span className="hidden sm:inline font-body text-sm text-dreamloom-muted">
+        <span className="hidden font-body text-sm font-medium text-dreamloom-muted sm:inline">
           AI Story Studio
         </span>
       </div>
@@ -72,7 +75,7 @@ export function StatusBar({
         <button
           onClick={onToggleBible}
           aria-label="Story Bible"
-          className="rounded-lg border border-white/10 px-3 py-1.5 font-body text-sm text-dreamloom-text/70 transition-colors hover:border-dreamloom-gold/40 hover:text-dreamloom-gold"
+          className="rounded-lg border border-[#9fc7c3]/60 bg-[#f8fcfc]/70 px-3 py-1.5 font-body text-sm font-medium text-dreamloom-text/80 transition-colors hover:border-dreamloom-accent/60 hover:text-dreamloom-accent"
           title="Story Bible (B)"
         >
           <BookIcon />
@@ -84,8 +87,8 @@ export function StatusBar({
           aria-pressed={kidSafeMode}
           className={`rounded-lg border px-3 py-1.5 font-body text-sm font-medium transition-colors ${
             kidSafeMode
-              ? "border-green-400/30 text-green-400 hover:border-green-400/60"
-              : "border-orange-400/30 text-orange-400 hover:border-orange-400/60"
+              ? "border-emerald-400/45 bg-emerald-50/80 text-emerald-700 hover:border-emerald-500/60"
+              : "border-dreamloom-gold/45 bg-orange-50/70 text-[#a8612f] hover:border-dreamloom-gold/70"
           }`}
           title={kidSafeMode ? "Kid-Safe: ON" : "Kid-Safe: OFF"}
         >
@@ -100,7 +103,7 @@ export function StatusBar({
               onClick={() => setVoicePickerOpen((o) => !o)}
               aria-expanded={voicePickerOpen}
               aria-label="Voice style"
-              className="rounded-lg border border-white/10 px-3 py-1.5 font-body text-sm text-dreamloom-text/70 transition-colors hover:border-dreamloom-accent/40 hover:text-dreamloom-accent-light"
+              className="rounded-lg border border-[#9fc7c3]/60 bg-[#f8fcfc]/70 px-3 py-1.5 font-body text-sm font-medium text-dreamloom-text/80 transition-colors hover:border-dreamloom-accent/60 hover:text-dreamloom-accent"
               title="Voice style"
             >
               {currentStyleLabel}
@@ -108,7 +111,7 @@ export function StatusBar({
             <AnimatePresence>
               {voicePickerOpen && (
                 <motion.div
-                  className="absolute right-0 top-full z-50 mt-2 w-52 rounded-xl border border-white/15 bg-dreamloom-surface/95 p-2 shadow-2xl backdrop-blur-xl"
+                  className="absolute right-0 top-full z-50 mt-2 w-52 rounded-xl border border-[#9fc7c3]/60 bg-[#f7fcfb]/95 p-2 shadow-2xl backdrop-blur-xl"
                   initial={{ opacity: 0, y: -8, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -8, scale: 0.95 }}
@@ -123,8 +126,8 @@ export function StatusBar({
                       }}
                       className={`flex w-full flex-col rounded-lg px-3 py-2 text-left transition-colors ${
                         voiceStyle === s.value
-                          ? "bg-dreamloom-accent/20 text-dreamloom-accent-light"
-                          : "text-dreamloom-text/70 hover:bg-white/5 hover:text-white"
+                          ? "bg-dreamloom-accent/15 text-dreamloom-accent"
+                          : "text-dreamloom-text/75 hover:bg-[#eaf4f2] hover:text-dreamloom-text"
                       }`}
                     >
                       <span className="font-body text-sm font-medium">{s.label}</span>
@@ -149,7 +152,7 @@ export function StatusBar({
                 {c.displayName.charAt(0).toUpperCase()}
               </div>
             ))}
-            <span className="ml-1 font-body text-xs text-dreamloom-muted">
+            <span className="ml-1 font-body text-xs font-medium text-dreamloom-muted">
               {collaborators.length}
             </span>
           </div>
@@ -157,7 +160,7 @@ export function StatusBar({
 
         {/* Session info + save status */}
         {sessionId && (
-          <span className="hidden font-body text-sm text-dreamloom-muted/70 sm:inline">
+          <span className="hidden font-body text-sm text-dreamloom-muted/80 sm:inline">
             Session: {sessionId.slice(0, 8)}
           </span>
         )}
@@ -202,21 +205,21 @@ export function StatusBar({
                 : {}
             }
           />
-          <span className="hidden font-body text-sm text-dreamloom-text/70 sm:inline">{label}</span>
+          <span className="hidden font-body text-sm font-medium text-dreamloom-text/75 sm:inline">{label}</span>
         </div>
 
         {/* Connect/Disconnect button */}
         {connectionStatus === "disconnected" || connectionStatus === "error" || connectionStatus === "reconnecting" ? (
           <button
             onClick={onConnect}
-            className="rounded-full bg-dreamloom-gold px-3 sm:px-5 py-1.5 font-body text-sm font-medium text-dreamloom-bg transition-colors hover:bg-dreamloom-gold/80"
+            className="rounded-full bg-gradient-to-r from-[#1b929b] to-[#e1854d] px-3 py-1.5 font-body text-sm font-semibold text-[#f7fffd] transition-colors hover:from-[#167f88] hover:to-[#cb7440] sm:px-5"
           >
             Connect
           </button>
         ) : connectionStatus === "connected" ? (
           <button
             onClick={onDisconnect}
-            className="rounded-full border border-white/15 px-3 sm:px-5 py-1.5 font-body text-sm text-dreamloom-text/70 transition-colors hover:border-red-400/50 hover:text-red-400"
+            className="rounded-full border border-[#9fc7c3]/70 bg-[#f8fcfc]/70 px-3 py-1.5 font-body text-sm font-medium text-dreamloom-text/80 transition-colors hover:border-red-400/55 hover:text-red-500 sm:px-5"
           >
             End Session
           </button>

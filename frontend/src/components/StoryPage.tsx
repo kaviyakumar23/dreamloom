@@ -55,7 +55,7 @@ function StoryPageBlock({
   if (block.type === "text" && block.content) {
     return (
       <motion.div
-        className="group/text relative rounded-xl border border-white/8 bg-dreamloom-surface/50 p-4 sm:p-6 backdrop-blur-sm"
+        className="group/text relative rounded-xl border border-[#9fc8c5]/55 bg-[#f6fcfb]/86 p-4 backdrop-blur-sm sm:p-6"
         initial={isLatest ? { opacity: 0, y: 20 } : false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay }}
@@ -90,7 +90,7 @@ function StoryPageBlock({
             {onEdit && sceneId && (
               <button
                 onClick={startEdit}
-                className="absolute right-3 top-3 rounded-md p-1 text-white/0 transition-colors group-hover/text:text-dreamloom-muted hover:!text-dreamloom-gold"
+                className="absolute right-3 top-3 rounded-md p-1 text-transparent transition-colors group-hover/text:text-dreamloom-muted hover:!text-dreamloom-gold"
                 title="Edit text (double-click)"
               >
                 <PencilIcon />
@@ -161,7 +161,7 @@ export const StoryPage = memo(function StoryPage({ page, isLatest, onRegenerate,
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <span className="rounded-full border border-dreamloom-gold/30 bg-dreamloom-gold/10 px-3 py-1 font-body text-sm font-medium text-dreamloom-gold">
+        <span className="rounded-full border border-dreamloom-gold/40 bg-dreamloom-gold/12 px-3 py-1 font-body text-sm font-medium text-[#a05d2f]">
           Scene {page.sceneNumber}
         </span>
         {page.branchLabel && (
@@ -170,7 +170,7 @@ export const StoryPage = memo(function StoryPage({ page, isLatest, onRegenerate,
           </span>
         )}
         {page.title && (
-          <span className="font-display text-base font-medium italic text-dreamloom-text/80">
+          <span className="font-display text-base font-medium italic text-dreamloom-text/85">
             {page.title}
           </span>
         )}
@@ -205,7 +205,7 @@ export const StoryPage = memo(function StoryPage({ page, isLatest, onRegenerate,
             </div>
           )}
           {page.narration && (
-            <div className="rounded-xl border border-white/8 bg-dreamloom-surface/50 p-4 sm:p-6 backdrop-blur-sm">
+            <div className="rounded-xl border border-[#9fc8c5]/55 bg-[#f6fcfb]/86 p-4 backdrop-blur-sm sm:p-6">
               {isLatest ? (
                 <TypewriterText
                   text={page.narration}
@@ -276,7 +276,7 @@ export const StoryPage = memo(function StoryPage({ page, isLatest, onRegenerate,
             key={key}
             onClick={() => toggleReaction(key)}
             whileTap={{ scale: 1.3 }}
-            className="flex items-center gap-1 rounded-full border border-white/5 bg-dreamloom-card/30 px-2.5 py-1 text-sm transition-colors hover:border-dreamloom-gold/30 hover:bg-dreamloom-gold/10"
+            className="flex items-center gap-1 rounded-full border border-[#a8cfcc]/55 bg-[#edf7f5]/80 px-2.5 py-1 text-sm transition-colors hover:border-dreamloom-gold/45 hover:bg-dreamloom-gold/12"
             title={label}
           >
             <span>{emoji}</span>

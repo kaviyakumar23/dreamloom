@@ -28,7 +28,7 @@ export function Lightbox({ imageUrl, alt = "Story illustration", layoutId, onClo
       role="dialog"
       aria-modal="true"
       aria-label="Image fullscreen view"
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0a1d2a]/88"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -37,7 +37,7 @@ export function Lightbox({ imageUrl, alt = "Story illustration", layoutId, onClo
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+        className="absolute right-4 top-4 z-10 rounded-full border border-[#8bb7bf]/45 bg-[#0e2e41]/80 p-2 text-[#e4f4f6] transition-colors hover:bg-[#16455f]"
         aria-label="Close fullscreen"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

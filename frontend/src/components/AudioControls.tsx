@@ -1,6 +1,6 @@
 /**
  * AudioControls — mic, camera, volume, and text input.
- * Cinematic warm-gold design language.
+ * Restyled to match the landing page's teal/coral visual language.
  */
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -48,15 +48,19 @@ export function AudioControls({
   useEffect(() => {
     // Detect transition from speaking → not speaking while mic is on (barge-in)
     if (prevAgentSpeaking.current && !agentSpeaking && isMicOn) {
-      setWasInterrupted(true);
-      const t = setTimeout(() => setWasInterrupted(false), 800);
-      return () => clearTimeout(t);
+      prevAgentSpeaking.current = agentSpeaking;
+      const showId = setTimeout(() => setWasInterrupted(true), 0);
+      const hideId = setTimeout(() => setWasInterrupted(false), 800);
+      return () => {
+        clearTimeout(showId);
+        clearTimeout(hideId);
+      };
     }
     prevAgentSpeaking.current = agentSpeaking;
   }, [agentSpeaking, isMicOn]);
 
   return (
-    <div className="border-t border-white/10 bg-dreamloom-surface/80 px-3 sm:px-6 py-3 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md">
+    <div className="border-t border-[#9fc7c3]/55 bg-[#f5fbfa]/84 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md sm:px-6 sm:py-4">
       <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-center gap-2 sm:justify-between sm:gap-4">
         {/* Left: Mic + Camera */}
         <div className="flex items-center gap-3">
@@ -71,8 +75,8 @@ export function AudioControls({
             aria-pressed={isMicOn}
             className={`relative flex h-12 w-12 items-center justify-center rounded-full transition-all ${
               isMicOn
-                ? "bg-dreamloom-accent text-white shadow-[0_0_20px_rgba(124,58,237,0.4)]"
-                : "bg-dreamloom-card border border-white/10 text-dreamloom-text/60 hover:border-white/20 hover:text-dreamloom-text"
+                ? "bg-gradient-to-r from-dreamloom-accent to-dreamloom-accent-light text-white shadow-[0_0_24px_rgba(28,155,163,0.35)]"
+                : "border border-[#9fc7c3]/60 bg-[#edf7f5]/95 text-dreamloom-text/70 hover:border-dreamloom-accent/55 hover:text-dreamloom-text"
             } disabled:opacity-40 disabled:cursor-not-allowed`}
             whileTap={{ scale: 0.95 }}
           >
@@ -95,8 +99,8 @@ export function AudioControls({
             title={isPTT ? "PTT on — hold mic to talk" : "PTT off — auto voice detection"}
             className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all ${
               isPTT
-                ? "bg-dreamloom-accent/30 text-dreamloom-accent-light border border-dreamloom-accent/50"
-                : "bg-dreamloom-card/50 text-dreamloom-muted border border-white/5 hover:border-white/15"
+                ? "border border-dreamloom-accent/45 bg-dreamloom-accent/15 text-dreamloom-accent"
+                : "border border-[#9fc7c3]/55 bg-[#edf7f5]/90 text-dreamloom-muted hover:border-dreamloom-accent/40"
             } disabled:opacity-40 disabled:cursor-not-allowed`}
           >
             PTT
@@ -110,8 +114,8 @@ export function AudioControls({
             aria-pressed={isCameraOn}
             className={`flex h-12 w-12 items-center justify-center rounded-full transition-all ${
               isCameraOn
-                ? "bg-dreamloom-gold text-dreamloom-bg shadow-[0_0_20px_rgba(245,158,11,0.4)]"
-                : "bg-dreamloom-card border border-white/10 text-dreamloom-text/60 hover:border-white/20 hover:text-dreamloom-text"
+                ? "bg-gradient-to-r from-dreamloom-gold to-[#f0a26f] text-white shadow-[0_0_24px_rgba(225,133,77,0.35)]"
+                : "border border-[#9fc7c3]/60 bg-[#edf7f5]/95 text-dreamloom-text/70 hover:border-dreamloom-gold/55 hover:text-dreamloom-text"
             } disabled:opacity-40 disabled:cursor-not-allowed`}
             whileTap={{ scale: 0.95 }}
           >
@@ -132,7 +136,7 @@ export function AudioControls({
                 transition={{ duration: 0.2 }}
               >
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-dreamloom-gold/30 border-t-dreamloom-gold" />
-                <span className="font-body text-sm text-dreamloom-gold">
+                <span className="font-body text-sm font-medium text-[#9f5b2d]">
                   {generationStatus.message || "Creating scene..."}
                 </span>
               </motion.div>
@@ -150,7 +154,7 @@ export function AudioControls({
                   animate={{ scale: [1, 0.6, 1] }}
                   transition={{ duration: 0.4 }}
                 />
-                <span className="font-body text-sm font-medium text-dreamloom-accent-light">
+                <span className="font-body text-sm font-medium text-dreamloom-accent">
                   Interrupted<span className="hidden sm:inline"> — listening...</span>
                 </span>
               </motion.div>
@@ -176,7 +180,7 @@ export function AudioControls({
                     }}
                   />
                 ))}
-                <span className="ml-2 font-display text-base italic text-dreamloom-gold">
+                <span className="ml-2 font-display text-base italic text-[#9f5b2d]">
                   <span className="hidden sm:inline">Loom is speaking...</span>
                   <span className="sm:hidden">Speaking...</span>
                 </span>
@@ -249,7 +253,7 @@ export function AudioControls({
               value={volume}
               onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
               aria-label="Volume"
-              className="h-1 w-14 sm:w-20 cursor-pointer appearance-none rounded-full bg-dreamloom-card accent-dreamloom-gold"
+              className="h-1 w-14 cursor-pointer appearance-none rounded-full bg-[#d8ece9] accent-dreamloom-accent sm:w-20"
             />
           </div>
 
@@ -272,12 +276,12 @@ export function AudioControls({
               type="text"
               placeholder="Type instead..."
               disabled={!isConnected}
-              className="w-full sm:w-44 rounded-l-lg border border-white/10 bg-dreamloom-card px-3 py-2 font-body text-sm text-dreamloom-text placeholder:text-dreamloom-muted/60 focus:border-dreamloom-gold/50 focus:outline-none disabled:opacity-40"
+              className="w-full rounded-l-lg border border-[#9fc7c3]/60 bg-[#f8fcfb] px-3 py-2 font-body text-sm text-dreamloom-text placeholder:text-dreamloom-muted/70 focus:border-dreamloom-accent/55 focus:outline-none disabled:opacity-40 sm:w-44"
             />
             <button
               type="submit"
               disabled={!isConnected}
-              className="rounded-r-lg bg-dreamloom-gold px-4 py-2 font-body text-sm font-medium text-dreamloom-bg transition-colors hover:bg-dreamloom-gold/80 disabled:opacity-40"
+              className="rounded-r-lg bg-gradient-to-r from-dreamloom-accent to-dreamloom-gold px-4 py-2 font-body text-sm font-semibold text-white transition-colors hover:from-[#187e86] hover:to-[#c7723f] disabled:opacity-40"
             >
               Send
             </button>
@@ -333,7 +337,7 @@ function CameraOffIcon() {
 
 function VolumeIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-dreamloom-text/60">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-dreamloom-muted">
       <path d="M11 5 6 9H2v6h4l5 4V5Z" />
       <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
     </svg>

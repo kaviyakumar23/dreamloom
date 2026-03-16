@@ -189,7 +189,7 @@ function App() {
   }, [isSessionActive, refreshSessions]);
 
   return (
-    <div className="flex h-full flex-col bg-dreamloom-bg">
+    <div className="flex h-full flex-col bg-dreamloom-bg text-dreamloom-text">
       <AnimatePresence mode="wait">
         {!isSessionActive ? (
           <LandingPage
@@ -203,7 +203,10 @@ function App() {
             onStartWithTemplate={handleStartWithTemplate}
           />
         ) : (
-          <div key="session" className="flex h-full flex-col">
+          <div
+            key="session"
+            className="flex h-full flex-col bg-[radial-gradient(120%_90%_at_8%_-12%,rgba(63,176,177,0.16),transparent_42%),radial-gradient(90%_75%_at_95%_0%,rgba(235,141,80,0.14),transparent_38%),linear-gradient(180deg,#eef6f5_0%,#f8f1e8_52%,#edf4f3_100%)]"
+          >
             <StatusBar
               connectionStatus={status}
               sessionId={story.sessionId}
@@ -224,8 +227,8 @@ function App() {
                 <motion.div
                   className={`mx-4 mt-2 flex items-center gap-3 rounded-xl border px-5 py-3 backdrop-blur-sm ${
                     error.toLowerCase().includes("reconnect")
-                      ? "border-dreamloom-gold/30 bg-dreamloom-gold/10"
-                      : "border-red-400/30 bg-red-500/10"
+                      ? "border-[#e39867]/45 bg-[#fff4ec]/90"
+                      : "border-red-400/40 bg-red-50/95"
                   }`}
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -233,7 +236,7 @@ function App() {
                 >
                   {error.toLowerCase().includes("reconnect") ? (
                     <motion.div
-                      className="h-4 w-4 flex-shrink-0 rounded-full border-2 border-dreamloom-gold/30 border-t-dreamloom-gold"
+                      className="h-4 w-4 flex-shrink-0 rounded-full border-2 border-[#e7b089]/45 border-t-[#e1854d]"
                       animate={{ rotate: 360 }}
                       transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
                     />
@@ -246,13 +249,13 @@ function App() {
                   )}
                   <span className={`flex-1 font-body text-sm ${
                     error.toLowerCase().includes("reconnect")
-                      ? "text-dreamloom-gold"
-                      : "text-red-300"
+                      ? "text-[#a25a2b]"
+                      : "text-red-700"
                   }`}>{error}</span>
                   <button onClick={dismissError} aria-label="Dismiss error" className={
                     error.toLowerCase().includes("reconnect")
-                      ? "text-dreamloom-gold/60 hover:text-dreamloom-gold"
-                      : "text-red-400 hover:text-red-300"
+                      ? "text-[#b57246]/70 hover:text-[#9a582b]"
+                      : "text-red-500 hover:text-red-700"
                   }>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="18" y1="6" x2="6" y2="18" />

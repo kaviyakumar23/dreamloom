@@ -86,7 +86,7 @@ export function PublishButton({
         <motion.button
           key="default"
           onClick={() => setPhase("confirming")}
-          className="rounded-lg border border-dreamloom-gold/20 bg-dreamloom-gold/5 px-4 py-2 font-body text-sm text-dreamloom-gold transition-colors hover:bg-dreamloom-gold/15"
+          className="rounded-lg border border-[#8bc3c3]/55 bg-[#13384d]/55 px-4 py-2 font-body text-sm text-[#e7f3f5] transition-colors hover:bg-[#17455a]/70"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -101,24 +101,24 @@ export function PublishButton({
       {phase === "confirming" && (
         <motion.div
           key="confirming"
-          className="flex flex-col gap-2 rounded-lg border border-dreamloom-gold/20 bg-dreamloom-gold/5 p-3"
+          className="flex flex-col gap-2 rounded-lg border border-[#8bc3c3]/55 bg-[#13384d]/60 p-3"
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 4 }}
         >
-          <p className="font-body text-xs text-dreamloom-text/80">
+          <p className="font-body text-xs text-[#e1f0f3]">
             Share anonymously in the DreamLoom Gallery?
           </p>
           <div className="flex gap-2">
             <button
               onClick={handlePublish}
-              className="rounded-md bg-dreamloom-gold px-3 py-1 font-body text-xs font-semibold text-dreamloom-bg transition-colors hover:bg-amber-400"
+              className="rounded-md bg-gradient-to-r from-dreamloom-accent to-dreamloom-gold px-3 py-1 font-body text-xs font-semibold text-white transition-colors hover:from-[#16838c] hover:to-[#ca7340]"
             >
               Publish
             </button>
             <button
               onClick={() => setPhase("default")}
-              className="rounded-md border border-white/10 px-3 py-1 font-body text-xs text-dreamloom-text/70 transition-colors hover:bg-white/5"
+              className="rounded-md border border-[#8cbfc1]/45 px-3 py-1 font-body text-xs text-[#cfe6ea] transition-colors hover:bg-[#214f63]/45"
             >
               Cancel
             </button>
@@ -129,7 +129,7 @@ export function PublishButton({
       {phase === "publishing" && (
         <motion.div
           key="publishing"
-          className="flex items-center gap-2 rounded-lg border border-dreamloom-gold/20 bg-dreamloom-gold/5 px-4 py-2"
+          className="flex items-center gap-2 rounded-lg border border-[#8bc3c3]/55 bg-[#13384d]/60 px-4 py-2"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -139,7 +139,7 @@ export function PublishButton({
             animate={{ rotate: 360 }}
             transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
           />
-          <span className="font-body text-xs text-dreamloom-gold">Publishing...</span>
+          <span className="font-body text-xs text-[#f2ddca]">Publishing...</span>
         </motion.div>
       )}
 
@@ -154,7 +154,7 @@ export function PublishButton({
           <p className="font-body text-xs text-red-400">{errorMsg}</p>
           <button
             onClick={() => setPhase("default")}
-            className="self-start rounded-md border border-white/10 px-3 py-1 font-body text-xs text-dreamloom-text/70 transition-colors hover:bg-white/5"
+            className="self-start rounded-md border border-[#9ac4c6]/45 px-3 py-1 font-body text-xs text-[#cfe6ea] transition-colors hover:bg-[#214f63]/45"
           >
             Dismiss
           </button>
@@ -173,10 +173,7 @@ export function PublishButton({
             <CheckIcon />
             Published
           </span>
-          <button
-            onClick={handleUnpublish}
-            className="font-body text-xs text-dreamloom-muted underline transition-colors hover:text-red-400"
-          >
+          <button onClick={handleUnpublish} className="font-body text-xs text-[#c9dee3] underline transition-colors hover:text-red-300">
             Unpublish
           </button>
         </motion.div>

@@ -24,11 +24,11 @@ export function ConversationPanel({ text, agentSpeaking }: ConversationPanelProp
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="overflow-hidden rounded-xl border border-dreamloom-gold/20 bg-dreamloom-surface/95 shadow-xl backdrop-blur-lg">
+      <div className="overflow-hidden rounded-xl border border-[#9fc8c4]/65 bg-[#f7fcfb]/95 shadow-xl backdrop-blur-lg">
         {/* Header — always visible, click to collapse */}
         <button
           onClick={() => setCollapsed((c) => !c)}
-          className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left transition-colors hover:bg-white/5"
+          className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left transition-colors hover:bg-[#eef8f6]"
         >
           {/* Speaking indicator */}
           <span className="relative flex h-2.5 w-2.5 shrink-0">
@@ -40,7 +40,7 @@ export function ConversationPanel({ text, agentSpeaking }: ConversationPanelProp
             }`} />
           </span>
 
-          <span className="flex-1 font-body text-xs font-semibold uppercase tracking-widest text-dreamloom-gold/80">
+          <span className="flex-1 font-body text-xs font-semibold uppercase tracking-widest text-[#1c717b]">
             {agentSpeaking ? "Loom is speaking" : "Loom"}
           </span>
 
@@ -54,7 +54,7 @@ export function ConversationPanel({ text, agentSpeaking }: ConversationPanelProp
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className={`text-dreamloom-gold/50 transition-transform ${collapsed ? "rotate-180" : ""}`}
+            className={`text-[#3d6773]/65 transition-transform ${collapsed ? "rotate-180" : ""}`}
           >
             <polyline points="6 9 12 15 18 9" />
           </svg>
@@ -70,8 +70,8 @@ export function ConversationPanel({ text, agentSpeaking }: ConversationPanelProp
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="max-h-40 overflow-y-auto border-t border-white/5 px-4 py-3">
-                <p className="font-body text-sm leading-relaxed text-dreamloom-text/85">
+              <div className="max-h-40 overflow-y-auto border-t border-[#a8cfcb]/55 px-4 py-3">
+                <p className="font-body text-sm leading-relaxed text-dreamloom-text/92">
                   {stripMarkdown(text)}
                 </p>
                 {agentSpeaking && (

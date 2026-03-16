@@ -31,7 +31,7 @@ export function DebugPanel({ metadata, transcripts = [], isOpen, onToggle }: Deb
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-label="Under the Hood"
-        className="mb-2 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-dreamloom-card/80 text-dreamloom-text/50 transition-colors hover:border-white/20 hover:text-dreamloom-text"
+        className="mb-2 flex h-9 w-9 items-center justify-center rounded-full border border-[#9fc7c3]/65 bg-[#edf7f5]/90 text-dreamloom-text/55 transition-colors hover:border-dreamloom-accent/45 hover:text-dreamloom-text"
         title="Under the Hood (D)"
       >
         <GearIcon />
@@ -43,14 +43,14 @@ export function DebugPanel({ metadata, transcripts = [], isOpen, onToggle }: Deb
           <motion.div
             role="dialog"
             aria-label="Debug panel"
-            className="absolute bottom-12 right-0 w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-white/10 bg-dreamloom-surface/95 backdrop-blur-xl shadow-xl sm:w-80"
+            className="absolute bottom-12 right-0 w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-[#9fc7c3]/65 bg-[#f7fcfb]/95 backdrop-blur-xl shadow-xl sm:w-80"
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="border-b border-white/10 px-4 py-3">
-              <h3 className="font-display text-base font-semibold text-dreamloom-gold">
+            <div className="border-b border-[#a8cfcb]/55 px-4 py-3">
+              <h3 className="font-display text-base font-semibold text-[#1c717b]">
                 Under the Hood
               </h3>
             </div>
@@ -88,7 +88,7 @@ export function DebugPanel({ metadata, transcripts = [], isOpen, onToggle }: Deb
 
             {/* Transcript Log */}
             {transcripts.length > 0 && (
-              <div className="border-t border-white/10">
+              <div className="border-t border-[#a8cfcb]/55">
                 <div className="px-4 py-2">
                   <p className="font-body text-xs font-medium text-dreamloom-muted uppercase tracking-wider">Transcript Log</p>
                 </div>

@@ -44,7 +44,7 @@ export function StoryTimeline({ pages }: StoryTimelineProps) {
           <div key={page.sceneId} className="flex flex-1 items-center">
             {/* Connecting line (before dot, except first) */}
             {i > 0 && (
-              <div className="h-0.5 flex-1 bg-white/10" />
+              <div className="h-0.5 flex-1 bg-[#9fc8c4]/45" />
             )}
 
             {/* Dot */}

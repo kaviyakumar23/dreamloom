@@ -1,19 +1,18 @@
 /**
  * StoryBible — slide-out side panel showing live story state.
  * Characters, setting, plot threads, and scene summaries.
- * Cinematic warm-gold design language.
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { StoryBibleData } from "../types";
 
 const AVATAR_COLORS = [
-  "bg-amber-500",
-  "bg-rose-500",
-  "bg-sky-500",
-  "bg-emerald-500",
-  "bg-violet-500",
-  "bg-orange-500",
+  "bg-[#2aa3a7]",
+  "bg-[#e1864b]",
+  "bg-[#5b8ecf]",
+  "bg-[#2f9f8f]",
+  "bg-[#7b80d5]",
+  "bg-[#c87b43]",
 ];
 
 function hashName(name: string): number {
@@ -40,7 +39,7 @@ export function StoryBible({ data, isOpen, onClose }: StoryBibleProps) {
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 z-40 bg-black/50"
+            className="fixed inset-0 z-40 bg-[#0f2a3a]/30"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -52,31 +51,31 @@ export function StoryBible({ data, isOpen, onClose }: StoryBibleProps) {
             role="dialog"
             aria-modal="true"
             aria-label="Story Bible"
-            className="fixed right-0 top-0 z-50 h-full w-full overflow-y-auto border-l border-white/10 bg-dreamloom-surface/95 backdrop-blur-xl sm:w-96"
+            className="fixed right-0 top-0 z-50 h-full w-full overflow-y-auto border-l border-[#9fc7c3]/65 bg-[#f7fcfb]/95 backdrop-blur-xl sm:w-96"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-              <h2 className="font-display text-xl font-bold text-white">Story Bible</h2>
+            <div className="flex items-center justify-between border-b border-[#a8cfcb]/55 px-5 py-4">
+              <h2 className="font-display text-xl font-semibold text-dreamloom-text">Story Bible</h2>
               <button
                 onClick={onClose}
-                className="text-dreamloom-muted transition-colors hover:text-white"
+                className="text-dreamloom-muted transition-colors hover:text-dreamloom-text"
                 aria-label="Close Story Bible"
               >
                 <CloseIcon />
               </button>
             </div>
 
-            <div className="p-5 space-y-6">
+            <div className="space-y-6 p-5">
               {/* Story info */}
               {data.title && (
                 <Section title="Story">
-                  <p className="font-display text-lg font-semibold text-white">{data.title}</p>
+                  <p className="font-display text-lg font-semibold text-dreamloom-text">{data.title}</p>
                   {data.genre && (
-                    <span className="mt-2 inline-block rounded-full border border-dreamloom-gold/30 bg-dreamloom-gold/10 px-3 py-0.5 font-body text-sm text-dreamloom-gold">
+                    <span className="mt-2 inline-block rounded-full border border-dreamloom-gold/40 bg-dreamloom-gold/12 px-3 py-0.5 font-body text-sm text-[#a05d2f]">
                       {data.genre}
                     </span>
                   )}
@@ -115,7 +114,7 @@ export function StoryBible({ data, isOpen, onClose }: StoryBibleProps) {
                     {data.scenes.map((scene) => (
                       <div
                         key={scene.sceneNumber}
-                        className="flex gap-3 rounded-xl border border-white/5 bg-dreamloom-card/30 p-3"
+                        className="flex gap-3 rounded-xl border border-[#a8cfcb]/55 bg-[#f1f9f8]/90 p-3"
                       >
                         {scene.thumbnail && (
                           <img
@@ -125,7 +124,7 @@ export function StoryBible({ data, isOpen, onClose }: StoryBibleProps) {
                           />
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="font-body text-sm font-medium text-white">
+                          <p className="font-body text-sm font-medium text-dreamloom-text">
                             Scene {scene.sceneNumber}
                             {scene.title && `: ${scene.title}`}
                           </p>
@@ -167,13 +166,13 @@ function CharacterCard({ name, description }: { name: string; description: strin
     <button
       onClick={() => setExpanded((e) => !e)}
       aria-expanded={expanded}
-      className="w-full text-left rounded-xl border-l-2 border-l-dreamloom-gold/40 border border-white/5 bg-dreamloom-card/50 p-4 transition-colors hover:bg-dreamloom-card/70"
+      className="w-full rounded-xl border border-[#a7cfcc]/60 border-l-2 border-l-dreamloom-accent/45 bg-[#f1f9f8]/90 p-4 text-left transition-colors hover:bg-[#e8f5f2]"
     >
       <div className="flex items-center gap-3">
         <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${colorClass} text-white font-display text-sm font-bold`}>
           {initial}
         </div>
-        <p className="font-display text-base font-semibold text-dreamloom-gold flex-1">
+        <p className="flex-1 font-display text-base font-semibold text-[#1d727c]">
           {name}
         </p>
         <svg
@@ -209,10 +208,10 @@ function Section({
   return (
     <div>
       <div className="mb-3 flex items-center gap-3">
-        <h3 className="font-body text-xs font-semibold uppercase tracking-widest text-dreamloom-gold/70">
+        <h3 className="font-body text-xs font-semibold uppercase tracking-widest text-[#227580]/80">
           {title}
         </h3>
-        <span className="h-px flex-1 bg-white/8" />
+        <span className="h-px flex-1 bg-[#a8cfcb]/55" />
       </div>
       {children}
     </div>

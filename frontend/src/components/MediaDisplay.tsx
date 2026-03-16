@@ -26,7 +26,7 @@ export function MediaDisplay({
   return (
     <>
       <motion.div
-        className={`relative cursor-pointer overflow-hidden rounded-xl border border-white/5 ${className}`}
+        className={`relative cursor-pointer overflow-hidden rounded-xl border border-[#9fc7c3]/60 ${className}`}
         initial={{ opacity: 0, scale: 0.95, filter: "blur(20px)" }}
         animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
         transition={{ duration: 0.8, ease: "easeOut" }}
@@ -46,7 +46,7 @@ export function MediaDisplay({
         />
 
         {/* Cinematic vignette overlay */}
-        <div className="pointer-events-none absolute inset-0 rounded-xl shadow-[inset_0_0_80px_rgba(0,0,0,0.4)]" />
+        <div className="pointer-events-none absolute inset-0 rounded-xl shadow-[inset_0_0_75px_rgba(11,44,61,0.2)]" />
       </motion.div>
 
       <AnimatePresence>

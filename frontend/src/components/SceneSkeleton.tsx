@@ -11,7 +11,7 @@ export function SceneSkeleton() {
       </div>
 
       {/* Text block */}
-      <div className="mb-4 rounded-xl border border-white/5 bg-dreamloom-surface/30 p-4 sm:p-6">
+      <div className="mb-4 rounded-xl border border-[#a7cfcc]/55 bg-[#f6fcfb]/85 p-4 sm:p-6">
         <div className="space-y-2.5">
           <div className="shimmer h-4 w-full rounded" />
           <div className="shimmer h-4 w-[90%] rounded" />
@@ -23,7 +23,7 @@ export function SceneSkeleton() {
       <div className="shimmer aspect-video w-full rounded-xl" />
 
       {/* Second text block */}
-      <div className="mt-4 rounded-xl border border-white/5 bg-dreamloom-surface/30 p-4 sm:p-6">
+      <div className="mt-4 rounded-xl border border-[#a7cfcc]/55 bg-[#f6fcfb]/85 p-4 sm:p-6">
         <div className="space-y-2.5">
           <div className="shimmer h-4 w-full rounded" />
           <div className="shimmer h-4 w-[85%] rounded" />

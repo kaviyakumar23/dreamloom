@@ -21,6 +21,12 @@ interface StoryCanvasProps {
   onBranch?: (sceneId: string) => void;
 }
 
+const GENERATION_STEPS = [
+  "Composing narrative...",
+  "Painting illustrations...",
+  "Weaving together...",
+];
+
 export function StoryCanvas({ story, agentSpeaking, generationStatus, isMicOn, onRegenerate, onDelete, onEditNarration, onReorder, onBranch }: StoryCanvasProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -59,7 +65,7 @@ export function StoryCanvas({ story, agentSpeaking, generationStatus, isMicOn, o
     if (currentMusicUrlRef.current !== currentMusic.url) {
       currentMusicUrlRef.current = currentMusic.url;
       audio.src = currentMusic.url;
-      audio.volume = isMicOn ? 0.0 : (agentSpeaking ? 0.10 : 0.25);
+      audio.volume = 0.25;
       audio.load();
       audio.play().catch(() => {});
     }
@@ -90,7 +96,7 @@ export function StoryCanvas({ story, agentSpeaking, generationStatus, isMicOn, o
       ref={scrollRef}
       role="main"
       id="main"
-      className="relative flex-1 overflow-y-auto px-3 sm:px-4 py-6 sm:py-8"
+      className="relative flex-1 overflow-y-auto px-3 py-6 text-dreamloom-text sm:px-4 sm:py-8"
     >
       {/* Generation status indicator — sticky at top */}
       <AnimatePresence>
@@ -101,10 +107,10 @@ export function StoryCanvas({ story, agentSpeaking, generationStatus, isMicOn, o
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
           >
-            <div className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-dreamloom-gold/30 bg-dreamloom-surface/90 backdrop-blur-lg shadow-lg shadow-dreamloom-gold/5">
+            <div className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-[#98c6c2]/65 bg-[#f5fbfa]/90 backdrop-blur-lg shadow-lg shadow-[#4fbeb4]/10">
               {/* Animated progress bar at top */}
               <motion.div
-                className="h-1 bg-gradient-to-r from-dreamloom-gold via-[#d4a843] to-dreamloom-accent-light"
+                className="h-1 bg-gradient-to-r from-[#e2864c] via-[#2cb1b2] to-[#58cdc6]"
                 initial={{ x: "-100%" }}
                 animate={{ x: "100%" }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -125,7 +131,7 @@ export function StoryCanvas({ story, agentSpeaking, generationStatus, isMicOn, o
                   </div>
                 </div>
                 <div className="flex-1">
-                  <p className="font-display text-base font-semibold text-dreamloom-gold">
+                  <p className="font-display text-base font-semibold text-[#186773]">
                     {generationStatus.message || "Processing..."}
                   </p>
                   <GenerationSteps />
@@ -146,11 +152,11 @@ export function StoryCanvas({ story, agentSpeaking, generationStatus, isMicOn, o
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
           >
-            <h1 className="mb-3 font-display text-2xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-b from-white to-[#d4c4a8] bg-clip-text text-transparent">
+            <h1 className="mb-3 bg-gradient-to-r from-[#143747] via-[#1c5f6f] to-[#e1854d] bg-clip-text font-display text-2xl font-semibold tracking-[-0.015em] text-transparent sm:text-4xl md:text-5xl">
               {story.title}
             </h1>
             {story.genre && (
-              <span className="rounded-full border border-dreamloom-gold/30 bg-dreamloom-gold/10 px-4 py-1 font-body text-sm text-dreamloom-gold">
+              <span className="rounded-full border border-dreamloom-gold/40 bg-dreamloom-gold/12 px-4 py-1 font-body text-sm font-medium text-[#a05d2f]">
                 {story.genre}
               </span>
             )}
@@ -219,12 +225,12 @@ export function StoryCanvas({ story, agentSpeaking, generationStatus, isMicOn, o
       {currentMusic && (
         <div className="sticky bottom-0 z-10 mx-auto max-w-2xl pt-4">
           <motion.div
-            className="flex items-center gap-3 rounded-xl border border-dreamloom-gold/20 bg-dreamloom-surface/90 px-4 py-3 backdrop-blur-lg shadow-lg"
+            className="flex items-center gap-3 rounded-xl border border-[#9cc8c4]/65 bg-[#f5fbfa]/92 px-4 py-3 backdrop-blur-lg shadow-lg"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <MusicNoteIcon />
-            <span className="font-body text-sm font-medium text-dreamloom-gold">
+            <span className="font-body text-sm font-medium text-[#9f5b2d]">
               {currentMusic.mood}
             </span>
             <audio
@@ -282,12 +288,12 @@ function MusicNoteIcon() {
 /** Elapsed timer shown during scene generation. */
 function GenerationTimer({ active }: { active: boolean }) {
   const [elapsed, setElapsed] = useState(0);
-  const startRef = useRef(Date.now());
+  const startRef = useRef(0);
 
   useEffect(() => {
     if (!active) {
-      setElapsed(0);
-      return;
+      const resetId = setTimeout(() => setElapsed(0), 0);
+      return () => clearTimeout(resetId);
     }
     startRef.current = Date.now();
     const id = setInterval(() => {
@@ -306,18 +312,17 @@ function GenerationTimer({ active }: { active: boolean }) {
 /** Animated step indicators that progress over time. */
 function GenerationSteps() {
   const [step, setStep] = useState(0);
-  const steps = ["Composing narrative...", "Painting illustrations...", "Weaving together..."];
 
   useEffect(() => {
     const id = setInterval(() => {
-      setStep((s) => (s + 1) % steps.length);
+      setStep((s) => (s + 1) % GENERATION_STEPS.length);
     }, 5000);
     return () => clearInterval(id);
   }, []);
 
   return (
     <p className="mt-0.5 font-body text-sm text-dreamloom-muted">
-      {steps[step]}
+      {GENERATION_STEPS[step]}
     </p>
   );
 }

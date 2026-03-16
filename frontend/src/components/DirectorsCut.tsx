@@ -58,20 +58,23 @@ export function DirectorsCut({ data, pages, userId, sessionId, storyTitle, story
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
     >
-      <div ref={contentRef} className="relative overflow-hidden rounded-2xl border border-dreamloom-gold/30 bg-gradient-to-b from-dreamloom-surface to-dreamloom-bg">
+      <div
+        ref={contentRef}
+        className="relative overflow-hidden rounded-2xl border border-[#7eb7bc]/55 bg-gradient-to-b from-[#103246] via-[#1a4860] to-[#1f5a73]"
+      >
         {/* Film grain overlay */}
         <div className="film-grain pointer-events-none absolute inset-0" />
 
         {/* Header */}
         <motion.div
-          className="border-b border-dreamloom-gold/20 px-6 py-5"
+          className="border-b border-[#7eb7bc]/45 px-6 py-5"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
           <div className="flex items-center gap-3">
             <ClapperIcon />
-            <h2 className="font-display text-2xl font-bold text-dreamloom-gold">
+            <h2 className="font-display text-2xl font-semibold text-[#f3dbc7]">
               Director's Cut
             </h2>
           </div>
@@ -103,7 +106,7 @@ export function DirectorsCut({ data, pages, userId, sessionId, storyTitle, story
               transition={{ delay: 0.8 }}
             >
               <SectionLabel>Logline</SectionLabel>
-              <p className="mt-2 font-display text-xl font-medium italic leading-relaxed text-white">
+              <p className="mt-2 font-display text-xl font-medium italic leading-relaxed text-[#ecf6f8]">
                 "{data.logline}"
               </p>
             </motion.div>
@@ -127,14 +130,14 @@ export function DirectorsCut({ data, pages, userId, sessionId, storyTitle, story
                 <a
                   href={blobUrl}
                   download="dreamloom-story.webm"
-                  className="mt-2 inline-block font-body text-sm text-dreamloom-gold hover:underline"
+                  className="mt-2 inline-block font-body text-sm text-[#ffdcbf] hover:underline"
                 >
                   Download WebM
                 </a>
               </div>
             ) : generating ? (
               <div className="mt-3 flex items-center gap-3">
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-dreamloom-card">
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#2a6175]/70">
                   <motion.div
                     className="h-full rounded-full bg-dreamloom-gold"
                     initial={{ width: 0 }}
@@ -142,13 +145,13 @@ export function DirectorsCut({ data, pages, userId, sessionId, storyTitle, story
                     transition={{ duration: 0.3 }}
                   />
                 </div>
-                <span className="font-body text-sm text-dreamloom-muted">{progress}%</span>
+                <span className="font-body text-sm text-[#c9dee3]">{progress}%</span>
               </div>
             ) : (
               <button
                 onClick={handleGenerateAnimatic}
                 disabled={pages.length < 1}
-                className="mt-3 flex w-full items-center justify-center gap-3 rounded-xl border border-dreamloom-gold/30 bg-dreamloom-gold/10 px-6 py-4 font-display text-lg font-semibold text-dreamloom-gold transition-all hover:bg-dreamloom-gold/20 hover:border-dreamloom-gold/50 disabled:opacity-40"
+                className="mt-3 flex w-full items-center justify-center gap-3 rounded-xl border border-[#8bc4c4]/55 bg-[#12384d]/60 px-6 py-4 font-display text-lg font-semibold text-[#eaf5f8] transition-all hover:border-[#add9d8] hover:bg-[#144258]/75 disabled:opacity-40"
               >
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M8 5v14l11-7z" />
@@ -168,14 +171,14 @@ export function DirectorsCut({ data, pages, userId, sessionId, storyTitle, story
             <button
               onClick={() => exportToPdf(contentRef, data.logline || "DreamLoom Story")}
               disabled={exporting}
-              className="rounded-lg border border-dreamloom-gold/20 bg-dreamloom-gold/5 px-4 py-2 font-body text-sm text-dreamloom-gold transition-colors hover:bg-dreamloom-gold/15 disabled:opacity-40"
+              className="rounded-lg border border-[#8bc3c3]/55 bg-[#13384d]/55 px-4 py-2 font-body text-sm text-[#e7f3f5] transition-colors hover:bg-[#17445a]/70 disabled:opacity-40"
             >
               {exporting ? "Exporting..." : "Export PDF"}
             </button>
             <button
               onClick={() => exportToImage(contentRef, data.logline || "DreamLoom Story")}
               disabled={exporting}
-              className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 font-body text-sm text-dreamloom-text/70 transition-colors hover:bg-white/10 disabled:opacity-40"
+              className="rounded-lg border border-[#7fb7bc]/45 bg-[#1a465d]/45 px-4 py-2 font-body text-sm text-[#d0e5ea] transition-colors hover:bg-[#23536b]/55 disabled:opacity-40"
             >
               {exporting ? "Exporting..." : "Export Image"}
             </button>
@@ -226,10 +229,10 @@ export function DirectorsCut({ data, pages, userId, sessionId, storyTitle, story
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="font-body text-xs font-semibold uppercase tracking-widest text-dreamloom-gold/80">
+      <span className="font-body text-xs font-semibold uppercase tracking-widest text-[#b9dbe0]">
         {children}
       </span>
-      <span className="h-px flex-1 bg-dreamloom-gold/15" />
+      <span className="h-px flex-1 bg-[#77adb8]/45" />
     </div>
   );
 }
@@ -245,7 +248,7 @@ function ClapperIcon() {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="text-dreamloom-gold"
+      className="text-[#f3dbc7]"
     >
       <path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" />
       <path d="m6.2 5.3 3.1 3.9" />

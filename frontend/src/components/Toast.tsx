@@ -30,19 +30,19 @@ export function Toast({ message, action, duration = 5000, onDismiss }: ToastProp
       exit={{ opacity: 0, y: 20, scale: 0.95 }}
       transition={{ duration: 0.2 }}
     >
-      <div className="flex items-center gap-3 rounded-xl border border-white/15 bg-dreamloom-surface/95 px-5 py-3 shadow-2xl backdrop-blur-xl">
+      <div className="flex items-center gap-3 rounded-xl border border-[#9fc7c3]/65 bg-[#f7fcfb]/95 px-5 py-3 shadow-2xl backdrop-blur-xl">
         <span className="font-body text-sm text-dreamloom-text">{message}</span>
         {action && (
           <button
             onClick={action.onClick}
-            className="rounded-lg border border-dreamloom-gold/30 bg-dreamloom-gold/10 px-3 py-1 font-body text-sm font-medium text-dreamloom-gold transition-colors hover:bg-dreamloom-gold/20"
+            className="rounded-lg border border-dreamloom-gold/35 bg-dreamloom-gold/12 px-3 py-1 font-body text-sm font-medium text-[#a05d2f] transition-colors hover:bg-dreamloom-gold/22"
           >
             {action.label}
           </button>
         )}
         <button
           onClick={onDismiss}
-          className="ml-1 text-dreamloom-muted transition-colors hover:text-white"
+          className="ml-1 text-dreamloom-muted transition-colors hover:text-dreamloom-text"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18" />
