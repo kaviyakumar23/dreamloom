@@ -1,0 +1,79 @@
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#7c3aed', 'primaryTextColor': '#f5f5f5', 'primaryBorderColor': '#a78bfa', 'lineColor': '#a78bfa', 'actorTextColor': '#f5f5f5', 'actorBorder': '#a78bfa', 'actorBkg': '#1e1b4b', 'activationBorderColor': '#7c3aed', 'activationBkgColor': '#312e81', 'signalColor': '#a78bfa', 'noteBkgColor': '#312e81', 'noteTextColor': '#f5f5f5', 'noteBorderColor': '#7c3aed'}}}%%
+sequenceDiagram
+    autonumber
+    participant U as User (Browser)
+    participant WS as WebSocket
+    participant ADK as ADK Runner<br/>+ LiveRequestQueue
+    participant Live as Gemini Live API<br/>Conversation Model
+    participant Agent as Director Agent<br/>"Loom"
+    participant SG as SceneGenerator<br/>Interleaved Model
+    participant MG as MusicGenerator<br/>Lyria RealTime
+    participant GCS as Cloud Storage
+
+    Note over U,GCS: Phase 1 — User speaks a story idea
+
+    U->>WS: Binary PCM audio (16 kHz)
+    WS->>ADK: send_realtime(audio)
+    ADK->>Live: Stream PCM audio
+    Note right of Live: VAD detects<br/>end of speech
+
+    Live->>ADK: Agent voice response (24 kHz PCM)
+    ADK->>WS: Audio chunks + text events
+    WS->>U: Binary PCM → AudioPlayback<br/>JSON text → ConversationPanel
+
+    Note over U,GCS: Phase 2 — Agent decides to create a scene (tool call)
+
+    Live->>ADK: tool_call: create_scene(title, prompt, mood, ...)
+    ADK->>Agent: Execute tool
+    Agent->>WS: notify: {type: "generating", active: true}
+    WS->>U: Show generation spinner + timer
+
+    Note over U,GCS: Phase 3 — Interleaved scene generation (background task)
+
+    Agent->>SG: generate_scene(prompt, style_ref)
+    SG->>SG: Build prompt with characters,<br/>style, continuity notes
+
+    rect rgba(124, 45, 18, 0.3)
+        Note over SG: Gemini Interleaved API Call
+        SG->>SG: response_modalities=["TEXT","IMAGE"]
+        SG-->>SG: Stream: text → image → text → image ...
+    end
+
+    loop Each image part
+        SG->>GCS: save_media(image_bytes)
+        GCS-->>SG: public URL
+    end
+
+    SG-->>Agent: SceneResult(blocks, metadata)
+
+    Note over U,GCS: Phase 4 — Music generation (parallel background task)
+
+    Agent->>MG: generate(mood, tempo)
+    MG->>MG: Lyria RealTime streaming
+    MG->>GCS: save_media(wav_bytes)
+    GCS-->>MG: public URL
+    MG-->>Agent: music URL
+
+    Note over U,GCS: Phase 5 — Frontend receives and renders
+
+    Agent->>WS: notify: {type: "interleaved_scene", blocks, metadata}
+    WS->>U: Scene data → StoryCanvas renders<br/>interleaved text+image blocks
+
+    Agent->>WS: notify: {type: "music", url, mood}
+    WS->>U: Music URL → audio player
+
+    Agent->>WS: notify: {type: "story_state_update", bible}
+    WS->>U: Story Bible panel updates
+
+    Agent->>WS: notify: {type: "generating", active: false}
+    WS->>U: Hide spinner
+
+    Note over U,GCS: Phase 6 — Agent returns tool result, continues talking
+
+    Agent-->>ADK: tool_result: "Scene 1 created successfully"
+    ADK->>Live: Tool result
+    Live->>ADK: Agent voice: "There we go! What do you think?"
+    ADK->>WS: Audio + text
+    WS->>U: Agent voice plays + transcript shown
+
+    Note over U,GCS: Phase 7 — Session auto-saved to Firestore

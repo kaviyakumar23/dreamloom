@@ -1,0 +1,154 @@
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#7c3aed', 'primaryTextColor': '#f5f5f5', 'primaryBorderColor': '#a78bfa', 'lineColor': '#a78bfa', 'secondaryColor': '#1e1b4b', 'tertiaryColor': '#312e81'}}}%%
+graph TB
+    %% ─────────────────────────────────────────────────
+    %% FRONTEND — Browser (public web app)
+    %% ─────────────────────────────────────────────────
+    subgraph Browser["Frontend · React + Vite + TailwindCSS + Framer Motion"]
+        direction TB
+        subgraph Input["User Input"]
+            AW["AudioWorklet\n16 kHz PCM mic capture"]
+            CAM["Camera Capture\n1 fps JPEG · 640×480"]
+            TXT["Text Input\nFallback keyboard entry"]
+        end
+        subgraph Render["Story Rendering"]
+            SC["Story Canvas\nInterleaved text+image pages\nDrag-to-reorder · Inline edit"]
+            AP["Audio Playback\n24 kHz PCM · Web Audio API\nGain-node barge-in flush"]
+            SB["Story Bible\nCharacters · World · Continuity"]
+        end
+        subgraph Output["Exports & Finale"]
+            DC["Director's Cut\nCover · Logline · Trailer"]
+            AN["Animatic Assembly\nCanvas 1280×720 · VP9 WebM\nClient-side · No FFmpeg"]
+            EX["PDF & ZIP Export\njsPDF Storybook · JSZip images"]
+        end
+        subgraph Meta["Debug & Gallery"]
+            DP["Debug Panel\nModel proof: modalities\npart_order · timing"]
+            GAL["Gallery\nPublish · Browse · View"]
+        end
+    end
+
+    %% ─────────────────────────────────────────────────
+    %% REALTIME TRANSPORT
+    %% ─────────────────────────────────────────────────
+    WS_LINK["WebSocket · wss://\nBidi streaming\nBinary PCM + JSON messages\nSession-affinity sticky routing"]
+
+    %% ─────────────────────────────────────────────────
+    %% BACKEND — Cloud Run (private service)
+    %% ─────────────────────────────────────────────────
+    subgraph CloudRun["Backend · FastAPI on Cloud Run (us-central1)"]
+        direction TB
+        subgraph Endpoints["HTTP + WebSocket Endpoints"]
+            WS["WebSocket /ws\nVoice · Camera · Text · Events\nCollaborator management"]
+            TTS_EP["POST /api/tts\nTTS narration endpoint"]
+            REST["REST /api/gallery · /api/sessions\nCRUD for persistence"]
+        end
+        subgraph ADK["Google ADK Agent Layer"]
+            Runner["ADK Runner\nrun_live() + LiveRequestQueue"]
+            Agent["Director Agent 'Loom'\nSystem prompt · 6 tools\nKid-safe · Barge-in aware"]
+        end
+        subgraph Tools["Agent Tools"]
+            T1["create_scene()\nBridges to interleaved model"]
+            T2["generate_music()\nLyria + CC0 fallback"]
+            T3["create_directors_cut()\nFinale package generation"]
+            T4["set_story_metadata()\nadd_character()\nget_story_context()"]
+        end
+        subgraph Services["Backend Services"]
+            SG["SceneGenerator\nInterleaved text+image"]
+            MG["MusicGenerator\nLyria streaming"]
+            SS["StorySession\nState · Bible · Audio buffers\nNotification queue"]
+            MH["MediaHandler\nGCS upload / local fallback"]
+            FP["FirestorePersistence\nSession save/load\nGallery publish/read"]
+        end
+        subgraph Retry["Error & Retry"]
+            RH["Reconnect Handler\n5 retries · Exp backoff\nAudio transcription\nContext re-injection"]
+            FI["False-Interrupt Guard\n400 ms silence check\nResume if no speech"]
+        end
+    end
+
+    %% ─────────────────────────────────────────────────
+    %% GEMINI MODEL LAYER
+    %% ─────────────────────────────────────────────────
+    subgraph Models["Google AI Models (Gemini API)"]
+        LiveAPI["Gemini Live API\ngemini-2.5-flash-native-audio\nVoice bidi · Barge-in · VAD"]
+        InterleavedAPI["Gemini Interleaved\ngemini-2.5-flash-image\nresponse_modalities =\nTEXT, IMAGE"]
+        LyriaAPI["Lyria RealTime\nmodels/lyria-realtime-exp\n48 kHz stereo · v1alpha"]
+        TTSAPI["Gemini TTS\ngemini-2.5-flash-preview-tts\n24 kHz mono · Voice style"]
+        FlashAPI["Gemini Flash\ngemini-2.5-flash\nAudio transcription\non reconnect"]
+    end
+
+    %% ─────────────────────────────────────────────────
+    %% STORAGE LAYER
+    %% ─────────────────────────────────────────────────
+    subgraph Storage["Google Cloud Storage Layer"]
+        GCS["Cloud Storage (GCS)\nMedia bucket\nImages · Music · WAV\nPublic read CORS"]
+        FS["Firestore\nSessions collection\nPublished stories collection"]
+        AR["Artifact Registry\nDocker images\nCloud Build pipeline"]
+    end
+
+    %% ─────────────────────────────────────────────────
+    %% DATA FLOW: User Input Path
+    %% ─────────────────────────────────────────────────
+    AW -- "binary PCM frames" --> WS_LINK
+    CAM -- "base64 JPEG" --> WS_LINK
+    TXT -- "JSON text msg" --> WS_LINK
+    WS_LINK -- "bidi stream" --> WS
+
+    %% ─────────────────────────────────────────────────
+    %% DATA FLOW: Backend → Gemini
+    %% ─────────────────────────────────────────────────
+    WS <--> Runner
+    Runner <--> Agent
+    Runner -- "voice bidi\n(PCM in/out)" --> LiveAPI
+    Agent --> T1 & T2 & T3 & T4
+    T1 --> SG
+    T2 --> MG
+    T3 --> SG
+    T4 --> SS
+    SG -- "text+image\ngeneration" --> InterleavedAPI
+    MG -- "music\nstreaming" --> LyriaAPI
+    TTS_EP -- "narration\nsynthesis" --> TTSAPI
+    RH -- "audio\ntranscription" --> FlashAPI
+
+    %% ─────────────────────────────────────────────────
+    %% DATA FLOW: Gemini Response → Frontend
+    %% ─────────────────────────────────────────────────
+    WS -- "agent voice PCM" --> WS_LINK
+    WS -- "scene JSON\nmusic · metadata\nevents" --> WS_LINK
+    WS_LINK -- "binary PCM" --> AP
+    WS_LINK -- "scene data" --> SC
+    WS_LINK -- "bible update" --> SB
+    WS_LINK -- "directors_cut" --> DC
+    WS_LINK -- "metadata" --> DP
+
+    %% ─────────────────────────────────────────────────
+    %% DATA FLOW: TTS + Gallery (HTTP)
+    %% ─────────────────────────────────────────────────
+    AN -. "GET /api/tts" .-> TTS_EP
+    GAL -. "GET/POST /api/gallery" .-> REST
+
+    %% ─────────────────────────────────────────────────
+    %% DATA FLOW: Storage
+    %% ─────────────────────────────────────────────────
+    SG --> MH
+    MG --> MH
+    MH --> GCS
+    FP --> FS
+    REST --> FP
+    WS -- "save on disconnect\nload on resume" --> FP
+    AR -.-> CloudRun
+
+    %% ─────────────────────────────────────────────────
+    %% STYLES
+    %% ─────────────────────────────────────────────────
+    classDef browser fill:#1e1b4b,stroke:#a78bfa,color:#f5f5f5
+    classDef transport fill:#4c1d95,stroke:#c4b5fd,color:#f5f5f5,stroke-width:2px
+    classDef backend fill:#312e81,stroke:#7c3aed,color:#f5f5f5
+    classDef api fill:#7c2d12,stroke:#f97316,color:#f5f5f5
+    classDef storage fill:#064e3b,stroke:#10b981,color:#f5f5f5
+    classDef retry fill:#78350f,stroke:#fbbf24,color:#f5f5f5
+
+    class AW,CAM,TXT,SC,AP,SB,DC,AN,EX,DP,GAL browser
+    class WS_LINK transport
+    class WS,TTS_EP,REST,Runner,Agent,T1,T2,T3,T4,SG,MG,SS,MH,FP backend
+    class RH,FI retry
+    class LiveAPI,InterleavedAPI,LyriaAPI,TTSAPI,FlashAPI api
+    class GCS,FS,AR storage
