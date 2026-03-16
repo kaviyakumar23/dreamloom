@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import logging
+import time
 import traceback
 
 from backend.config import config
@@ -689,6 +690,7 @@ async def create_directors_cut(session_id: str) -> dict:
 
             # Store on session so it survives reload
             session.directors_cut = dc_result
+            session._directors_cut_timestamp = time.time()
 
             # Notify frontend
             session.notify({"type": "generating", "active": False, "message": ""})

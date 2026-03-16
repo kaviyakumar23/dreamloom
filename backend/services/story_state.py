@@ -48,6 +48,7 @@ class StorySession:
     world_description: str = ""
     kid_safe_mode: bool = True
     directors_cut: dict | None = None
+    _directors_cut_timestamp: float = 0.0
     stale_generation_id: str | None = None
     style_reference_image: bytes | None = None
     latest_camera_frame: bytes | None = None
@@ -146,6 +147,11 @@ class StorySession:
     def _invalidate_directors_cut(self) -> None:
         """Clear stale Director's Cut when scenes change."""
         if self.directors_cut:
+            # Don't invalidate if DC was just generated (< 60s ago) — prevents
+            # race condition where the agent creates a scene right after DC.
+            if time.time() - self._directors_cut_timestamp < 60:
+                logger.info("Skipping DC invalidation — generated < 60s ago")
+                return
             logger.info("Invalidating Director's Cut — scenes changed")
             self.directors_cut = None
             self.notify({"type": "directors_cut_invalidated"})

@@ -424,6 +424,7 @@ async def websocket_endpoint(ws: WebSocket):
     # Create ADK session and live queue only for host connections
     adk_session = None
     live_queue = None
+    tool_call_in_progress = False
     if not is_viewer:
         adk_session = await session_service.create_session(
             app_name="dreamloom",
@@ -516,7 +517,7 @@ async def websocket_endpoint(ws: WebSocket):
         first response turn (which would be a re-introduction) so the
         user experience is seamless.
         """
-        nonlocal live_queue, adk_session
+        nonlocal live_queue, adk_session, tool_call_in_progress
 
         start_sens = (types.StartSensitivity.START_SENSITIVITY_HIGH
                       if config.vad_start_sensitivity == "HIGH"
@@ -562,6 +563,7 @@ async def websocket_endpoint(ws: WebSocket):
                 ):
                     # Handle turn completion
                     if event.turn_complete:
+                        tool_call_in_progress = False
                         last_agent_transcript = ""
                         if mute_until_turn_complete:
                             mute_until_turn_complete = False
@@ -655,8 +657,10 @@ async def websocket_endpoint(ws: WebSocket):
                         # Still allow tool calls to go through (they affect story state)
                         for part in event.content.parts:
                             if part.function_call:
+                                tool_call_in_progress = True
                                 logger.info("Agent calling tool (during muted reconnect): %s", part.function_call.name)
                             elif part.function_response:
+                                tool_call_in_progress = False
                                 logger.info("Tool response (muted): %s", part.function_response.name)
                         continue
 
@@ -691,7 +695,8 @@ async def websocket_endpoint(ws: WebSocket):
                         # Log function calls and record as conversation milestones
                         # (in native audio mode, tool calls are the only text data that survives)
                         elif part.function_call:
-                            logger.info("Agent calling tool: %s", part.function_call.name)
+                            tool_call_in_progress = True
+                            logger.info("Agent calling tool: %s (gating realtime input)", part.function_call.name)
                             args_str = str(part.function_call.args)[:300] if part.function_call.args else ""
                             story_session.record_conversation(
                                 "tool_call",
@@ -699,6 +704,8 @@ async def websocket_endpoint(ws: WebSocket):
                             )
 
                         elif part.function_response:
+                            tool_call_in_progress = False
+                            logger.info("Tool call complete, resuming realtime input")
                             logger.info(
                                 "Tool response: %s -> %s",
                                 part.function_response.name,
@@ -972,12 +979,13 @@ async def websocket_endpoint(ws: WebSocket):
                     break
                 audio_data = message["bytes"]
                 story_session.record_audio(audio_data)
-                try:
-                    live_queue.send_realtime(
-                        types.Blob(data=audio_data, mime_type="audio/pcm;rate=16000")
-                    )
-                except Exception:
-                    pass  # Queue closed/replaced during retry — drop silently
+                if not tool_call_in_progress:
+                    try:
+                        live_queue.send_realtime(
+                            types.Blob(data=audio_data, mime_type="audio/pcm;rate=16000")
+                        )
+                    except Exception:
+                        pass  # Queue closed/replaced during retry — drop silently
 
             elif "text" in message and message["text"]:
                 data = json.loads(message["text"])
@@ -1007,15 +1015,16 @@ async def websocket_endpoint(ws: WebSocket):
                         frame_bytes = base64.b64decode(frame_b64)
                         # Store latest frame for scene generation reference
                         story_session.latest_camera_frame = frame_bytes
-                        try:
-                            live_queue.send_realtime(
-                                types.Blob(
-                                    data=frame_bytes,
-                                    mime_type="image/jpeg",
+                        if not tool_call_in_progress:
+                            try:
+                                live_queue.send_realtime(
+                                    types.Blob(
+                                        data=frame_bytes,
+                                        mime_type="image/jpeg",
+                                    )
                                 )
-                            )
-                        except Exception:
-                            pass  # Queue closed/replaced during retry
+                            except Exception:
+                                pass  # Queue closed/replaced during retry
                 elif msg_type == "toggle_kid_safe":
                     story_session.kid_safe_mode = data.get("enabled", True)
                     mode = "ON" if story_session.kid_safe_mode else "OFF"
@@ -1148,12 +1157,12 @@ async def websocket_endpoint(ws: WebSocket):
                         )
 
                 elif msg_type == "activity_start":
-                    if live_queue:
+                    if live_queue and not tool_call_in_progress:
                         live_queue.send_activity_start()
                         logger.debug("Manual activity_start signal sent")
 
                 elif msg_type == "activity_end":
-                    if live_queue:
+                    if live_queue and not tool_call_in_progress:
                         live_queue.send_activity_end()
                         logger.debug("Manual activity_end signal sent")
 

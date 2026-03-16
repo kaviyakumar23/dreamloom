@@ -206,6 +206,17 @@ export function useWebSocket() {
         if (msg.collaborators) {
           setCollaborators(msg.collaborators as Collaborator[]);
         }
+        // Fallback: if pending template hasn't been sent by turn_complete
+        // after 5s, send it anyway (native audio models may delay turn_complete)
+        if (pendingTemplateRef.current) {
+          setTimeout(() => {
+            if (pendingTemplateRef.current && wsRef.current?.readyState === WebSocket.OPEN) {
+              const tp = pendingTemplateRef.current;
+              pendingTemplateRef.current = null;
+              wsRef.current.send(JSON.stringify({ type: "text", text: tp }));
+            }
+          }, 5000);
+        }
         break;
       }
 
@@ -300,6 +311,7 @@ export function useWebSocket() {
           }
         }
         break;
+
 
       case "interrupted":
         setAgentSpeaking(false);
