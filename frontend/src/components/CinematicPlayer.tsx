@@ -323,10 +323,6 @@ export function CinematicPlayer({ pages, musicUrls = [], storyTitle, onClose }: 
       map.set(url, audio);
     });
     musicAudiosRef.current = map;
-    // Create shared AudioContext for music gain control
-    if (urls.size > 0 && !audioCtxRef.current) {
-      audioCtxRef.current = new AudioContext();
-    }
     return () => {
       map.forEach((audio) => {
         audio.pause();

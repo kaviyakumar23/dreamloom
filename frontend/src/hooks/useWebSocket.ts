@@ -263,6 +263,17 @@ export function useWebSocket() {
             kidSafeMode: bible.kid_safe_mode as boolean,
           });
         }
+        // Restore Director's Cut if it was previously generated
+        const dc = msg.directorsCut as Record<string, unknown> | undefined;
+        if (dc) {
+          setDirectorsCut({
+            coverUrl: (dc.cover_url as string) || "",
+            logline: (dc.logline as string) || "",
+            trailerText: (dc.trailer_text as string) || "",
+            sceneImages: (dc.scene_images as DirectorsCutData["sceneImages"]) || [],
+            metadata: dc.metadata as StoryPage["metadata"],
+          });
+        }
         break;
       }
 

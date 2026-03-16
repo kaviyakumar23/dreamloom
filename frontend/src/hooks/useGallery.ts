@@ -59,21 +59,22 @@ export function useGallery() {
     return null;
   }, []);
 
-  const publishStory = useCallback(async (body: Record<string, unknown>): Promise<string | null> => {
+  const publishStory = useCallback(async (body: Record<string, unknown>): Promise<{ id?: string; error?: string }> => {
     try {
       const res = await fetch(`${API_BASE}/api/gallery/publish`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
-        return data.publish_id || null;
+        return { id: data.publish_id || undefined };
       }
+      return { error: data.error || `Publish failed (${res.status})` };
     } catch (err) {
       console.warn("Failed to publish story:", err);
+      return { error: "Network error — could not reach server" };
     }
-    return null;
   }, []);
 
   const unpublishStory = useCallback(async (publishId: string, userId: string): Promise<boolean> => {

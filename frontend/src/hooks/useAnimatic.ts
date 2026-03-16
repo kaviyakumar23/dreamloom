@@ -190,9 +190,12 @@ export function useAnimatic(options: AnimaticOptions = {}) {
                 .map((b) => b.content)
                 .join(" ");
 
-            // ~250 chars → 15-20s of natural speech per scene
-            const ttsText = fullNarration.length > 250
-              ? fullNarration.slice(0, fullNarration.lastIndexOf(" ", 250)) || fullNarration.slice(0, 250)
+            // ~14 chars/sec for natural TTS narration, target ~14s of audio
+            const maxChars = 200;
+            const ttsText = fullNarration.length > maxChars
+              ? (fullNarration.slice(0, maxChars).replace(/[^.!?]*$/, '').trim()
+                 || fullNarration.slice(0, fullNarration.lastIndexOf(" ", maxChars))
+                 || fullNarration.slice(0, maxChars))
               : fullNarration;
 
             log(`  Scene ${page.sceneNumber}: narration text = "${ttsText.slice(0, 80)}..." (${ttsText.length} chars)`);
@@ -297,7 +300,7 @@ export function useAnimatic(options: AnimaticOptions = {}) {
         const sceneDurations = sceneData.map((scene, i) => {
           const narBuf = narrationBuffers[i];
           if (narBuf) {
-            const narMs = Math.ceil(narBuf.duration * 1000) + 1500;
+            const narMs = Math.ceil(narBuf.duration * 1000) + transitionMs + 2000;
             const dur = Math.max(minSceneMs, narMs);
             log(`  Scene ${i + 1} ("${scene.title}"): ${dur}ms (narration=${narBuf.duration.toFixed(1)}s)`);
             return dur;
@@ -455,6 +458,7 @@ export function useAnimatic(options: AnimaticOptions = {}) {
         const startTime = performance.now();
         let lastNarrationScene = -1;
         let currentNarrationNode: AudioBufferSourceNode | null = null;
+        let currentNarrationGain: GainNode | null = null;
         let frameCount = 0;
 
         await new Promise<void>((resolve) => {
@@ -531,8 +535,16 @@ export function useAnimatic(options: AnimaticOptions = {}) {
                   switchMusic(scene.musicUrl);
 
                   if (currentNarrationNode) {
-                    try { currentNarrationNode.stop(); } catch { /* ok */ }
+                    // Fade out over 150ms to avoid audio pop, then stop after 300ms
+                    const oldNarNode = currentNarrationNode;
+                    if (currentNarrationGain) {
+                      currentNarrationGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
+                    }
+                    setTimeout(() => {
+                      try { oldNarNode.stop(); } catch { /* ok */ }
+                    }, 300);
                     currentNarrationNode = null;
+                    currentNarrationGain = null;
                   }
 
                   const narBuf = narrationBuffers[sceneIdx];
@@ -550,6 +562,7 @@ export function useAnimatic(options: AnimaticOptions = {}) {
                     narGain.connect(streamDest);
                     src.start();
                     currentNarrationNode = src;
+                    currentNarrationGain = narGain;
                     src.onended = () => {
                       log(`  Narration ended for scene ${sceneIdx + 1}`);
                       if (currentMusicGain) {

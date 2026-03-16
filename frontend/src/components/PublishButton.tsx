@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { DirectorsCutData, StoryPage } from "../types";
 import { useGallery } from "../hooks/useGallery";
 
-type Phase = "default" | "confirming" | "publishing" | "published";
+type Phase = "default" | "confirming" | "publishing" | "published" | "error";
 
 interface PublishButtonProps {
   directorsCut: DirectorsCutData;
@@ -31,6 +31,7 @@ export function PublishButton({
   const { publishStory, unpublishStory, fetchMyPublished } = useGallery();
   const [phase, setPhase] = useState<Phase>("default");
   const [publishId, setPublishId] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState("");
 
   // Check if already published on mount
   useEffect(() => {
@@ -46,8 +47,9 @@ export function PublishButton({
 
   const handlePublish = useCallback(async () => {
     setPhase("publishing");
+    setErrorMsg("");
     const scenes = pages.map((p) => p.blocks);
-    const id = await publishStory({
+    const result = await publishStory({
       title: storyTitle,
       genre: storyGenre,
       style: storyStyle,
@@ -60,11 +62,12 @@ export function PublishButton({
       user_id: userId,
       session_id: sessionId,
     });
-    if (id) {
-      setPublishId(id);
+    if (result.id) {
+      setPublishId(result.id);
       setPhase("published");
     } else {
-      setPhase("default");
+      setErrorMsg(result.error || "Publish failed");
+      setPhase("error");
     }
   }, [publishStory, directorsCut, pages, storyTitle, storyGenre, storyStyle, userId, sessionId]);
 
@@ -137,6 +140,24 @@ export function PublishButton({
             transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
           />
           <span className="font-body text-xs text-dreamloom-gold">Publishing...</span>
+        </motion.div>
+      )}
+
+      {phase === "error" && (
+        <motion.div
+          key="error"
+          className="flex flex-col gap-2 rounded-lg border border-red-400/20 bg-red-400/5 p-3"
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 4 }}
+        >
+          <p className="font-body text-xs text-red-400">{errorMsg}</p>
+          <button
+            onClick={() => setPhase("default")}
+            className="self-start rounded-md border border-white/10 px-3 py-1 font-body text-xs text-dreamloom-text/70 transition-colors hover:bg-white/5"
+          >
+            Dismiss
+          </button>
         </motion.div>
       )}
 

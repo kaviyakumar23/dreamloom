@@ -1,7 +1,7 @@
 /**
  * Audio playback hook — plays PCM audio data from WebSocket.
  */
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UseAudioPlaybackOptions {
   sampleRate?: number;
@@ -16,6 +16,22 @@ export function useAudioPlayback({ sampleRate = 24000 }: UseAudioPlaybackOptions
   const nextStartTimeRef = useRef(0);
   const isSchedulingRef = useRef(false);
 
+  // Resume AudioContext on first user gesture (click/keydown/touch).
+  // Without this, AudioContext created before a gesture stays suspended.
+  useEffect(() => {
+    const resume = () => {
+      const ctx = audioContextRef.current;
+      if (ctx && ctx.state === "suspended") {
+        ctx.resume();
+      }
+    };
+    const events = ["click", "keydown", "touchstart"] as const;
+    events.forEach((e) => document.addEventListener(e, resume, { once: false, passive: true }));
+    return () => {
+      events.forEach((e) => document.removeEventListener(e, resume));
+    };
+  }, []);
+
   const getAudioContext = useCallback(() => {
     if (!audioContextRef.current || audioContextRef.current.state === "closed") {
       const ctx = new AudioContext({ sampleRate });
@@ -25,7 +41,7 @@ export function useAudioPlayback({ sampleRate = 24000 }: UseAudioPlaybackOptions
       audioContextRef.current = ctx;
       gainNodeRef.current = gain;
     }
-    // Resume if suspended (happens before first user interaction)
+    // Attempt resume — will actually succeed once user interacts
     if (audioContextRef.current.state === "suspended") {
       audioContextRef.current.resume();
     }

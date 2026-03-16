@@ -219,7 +219,10 @@ async def text_to_speech(request: Request):
 @app.post("/api/gallery/publish")
 async def publish_story(request: Request):
     """Publish a story snapshot to the public gallery."""
-    body = await request.json()
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
     required = ["user_id", "session_id"]
     for field in required:
         if not body.get(field):
@@ -228,6 +231,21 @@ async def publish_story(request: Request):
     if not body.get("title"):
         logline = body.get("logline", "")
         body["title"] = logline[:80] if logline else "Untitled Story"
+
+    # Build publish data — strip heavy block data from scenes to stay under
+    # Firestore's 1 MiB document limit.  Keep only text blocks (no images/
+    # binary), and cap narration length.
+    slim_scenes = []
+    for scene_blocks in body.get("scenes", []):
+        slim_blocks = []
+        for block in (scene_blocks if isinstance(scene_blocks, list) else []):
+            if block.get("type") == "text":
+                content = (block.get("content") or "")[:500]
+                slim_blocks.append({"type": "text", "content": content})
+            elif block.get("type") == "image" and block.get("url"):
+                slim_blocks.append({"type": "image", "url": block["url"]})
+        slim_scenes.append(slim_blocks)
+
     data = {
         "session_id": body["session_id"],
         "user_id": body["user_id"],
@@ -238,12 +256,19 @@ async def publish_story(request: Request):
         "cover_url": body.get("cover_url", ""),
         "trailer_text": body.get("trailer_text", ""),
         "scene_count": body.get("scene_count", 0),
-        "scenes": body.get("scenes", []),
+        "scenes": slim_scenes,
         "scene_images": body.get("scene_images", []),
     }
-    publish_id = await firestore_persistence.publish_story(data)
+    try:
+        publish_id = await firestore_persistence.publish_story(data)
+    except Exception as e:
+        logger.error("Publish endpoint failed: %s", e, exc_info=True)
+        return JSONResponse({"error": f"Publish failed: {e}"}, status_code=500)
     if not publish_id:
-        return JSONResponse({"error": "Publish failed"}, status_code=500)
+        return JSONResponse(
+            {"error": "Publish failed — Firestore may be unavailable"},
+            status_code=503,
+        )
     return JSONResponse({"publish_id": publish_id})
 
 
@@ -436,6 +461,7 @@ async def websocket_endpoint(ws: WebSocket):
                 ],
             },
             "storyBible": story_session.to_bible_dict(),
+            "directorsCut": story_session.directors_cut,
             "message": f"Welcome back! Your story \"{story_session.title}\" has been restored.",
         })
     else:

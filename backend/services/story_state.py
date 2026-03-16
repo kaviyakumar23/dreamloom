@@ -46,6 +46,7 @@ class StorySession:
     characters: dict[str, str] = field(default_factory=dict)
     world_description: str = ""
     kid_safe_mode: bool = True
+    directors_cut: dict | None = None
     stale_generation_id: str | None = None
     style_reference_image: bytes | None = None
     latest_camera_frame: bytes | None = None

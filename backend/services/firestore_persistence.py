@@ -91,6 +91,7 @@ class FirestorePersistence:
             "updated_at": time.time(),
             "scene_count": session.scene_count,
             "scenes": scenes,
+            "directors_cut": session.directors_cut,
         }
 
     @staticmethod
@@ -109,6 +110,7 @@ class FirestorePersistence:
             created_at=data.get("created_at", time.time()),
         )
         session.user_id = data.get("user_id", "")
+        session.directors_cut = data.get("directors_cut")
 
         for sd in data.get("scenes", []):
             scene = StoryScene(
@@ -252,8 +254,8 @@ class FirestorePersistence:
             logger.info("Story published: %s", publish_id)
             return publish_id
         except Exception as e:
-            logger.warning("Firestore publish failed: %s", e)
-            return None
+            logger.error("Firestore publish failed: %s", e, exc_info=True)
+            raise
 
     async def list_published(self, limit: int = 6) -> list[dict]:
         """List published stories (summary only, no private fields)."""

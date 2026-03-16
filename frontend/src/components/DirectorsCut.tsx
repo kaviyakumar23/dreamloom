@@ -8,6 +8,7 @@ import type { DirectorsCutData, StoryPage } from "../types";
 import { useAnimatic } from "../hooks/useAnimatic";
 import { useExport } from "../hooks/useExport";
 import { PublishButton } from "./PublishButton";
+import { fetchTTS } from "../services/tts";
 
 interface DirectorsCutProps {
   data: DirectorsCutData;
@@ -31,6 +32,22 @@ export function DirectorsCut({ data, pages, userId, sessionId, storyTitle, story
     pages.forEach((p, i) => {
       console.log(`[DirectorsCut]   Page ${i + 1}: scene=${p.sceneNumber}, title="${p.title}", image=${p.imageUrl ? "YES" : "NO"}, music=${p.musicUrl || "none"}, narration=${(p.narration || "").length} chars, blocks=${p.blocks.length}`);
     });
+
+    // Voice announcement so the user knows to wait
+    fetchTTS(
+      "Generating your story video now. This may take a minute, sit back and enjoy the wait!",
+    ).then((wav) => {
+      if (!wav) return;
+      const ctx = new AudioContext();
+      ctx.decodeAudioData(wav.slice(0)).then((buf) => {
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(ctx.destination);
+        src.start();
+        src.onended = () => ctx.close().catch(() => {});
+      }).catch(() => ctx.close().catch(() => {}));
+    });
+
     generate(pages);
   };
 

@@ -682,6 +682,9 @@ async def create_directors_cut(session_id: str) -> dict:
                 "metadata": result.metadata,
             }
 
+            # Store on session so it survives reload
+            session.directors_cut = dc_result
+
             # Notify frontend
             session.notify({"type": "generating", "active": False, "message": ""})
             session.notify({"type": "directors_cut", **dc_result})
