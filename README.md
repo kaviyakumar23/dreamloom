@@ -6,6 +6,8 @@ Not a prompt-to-page generator: Loom directs the story with taste, continuity, a
 
 Built for the [Gemini Live Agent Challenge](https://cloud.google.com/gemini/docs/live-agent-challenge) hackathon. **Category: Creative Storyteller.**
 
+**Live demo: [https://getdreamloom.com](https://getdreamloom.com)**
+
 ## Features
 
 - **Voice-first interaction** — Natural conversation with Loom, your AI creative director
@@ -13,7 +15,7 @@ Built for the [Gemini Live Agent Challenge](https://cloud.google.com/gemini/docs
 - **Two-model architecture** — Live API for voice conversation + Gemini interleaved model for scene generation
 - **Atmospheric music** — Per-scene mood-matched audio (Lyria + bundled fallback loops)
 - **Camera input** — Show sketches or objects via webcam — AI incorporates them into the story
-- **Director's Cut** — Cover image, logline, trailer voiceover, and animatic assembled automatically
+- **Director's Cut** — Cover image, logline, trailer voiceover, animatic, Storybook PDF export, and scene image ZIP download
 - **Story Bible** — Live sidebar tracking characters, setting, plot threads
 - **Kid-safe mode** — Family-friendly guardrails (default ON)
 - **Debug panel** — "Under the Hood" view proving interleaved output (model, modalities, part order, timing)
@@ -29,6 +31,7 @@ Built for the [Gemini Live Agent Challenge](https://cloud.google.com/gemini/docs
 | **Agent orchestration** | Google ADK (`google-adk`) |
 | **Frontend** | React + Vite + TypeScript |
 | **Styling** | TailwindCSS v4 + Framer Motion |
+| **Exports** | jsPDF (Storybook PDF) + JSZip (image ZIP) |
 | **Audio** | AudioWorklet (capture) + PCM playback |
 | **Deployment** | Cloud Run + GCS |
 

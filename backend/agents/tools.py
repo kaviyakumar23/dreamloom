@@ -30,8 +30,9 @@ def set_story_metadata(
     genre: str = "",
     style: str = "",
     world_description: str = "",
+    narrator_voice: str = "",
 ) -> dict:
-    """Set the story's title, genre, visual style, and world description.
+    """Set the story's title, genre, visual style, world description, and narrator voice.
 
     Call this at the beginning of a story to establish the creative direction.
 
@@ -42,6 +43,7 @@ def set_story_metadata(
         style: Visual art style (e.g., 'watercolor illustration', 'Studio Ghibli anime',
                'dark gothic oil painting').
         world_description: Brief description of the story world/setting.
+        narrator_voice: Narrator voice style (e.g., 'dramatic', 'gentle', 'energetic', 'mysterious').
 
     Returns:
         Confirmation dict with the story metadata.
@@ -57,6 +59,8 @@ def set_story_metadata(
         session.style = style
     if world_description:
         session.world_description = world_description
+    if narrator_voice:
+        session.narrator_voice = narrator_voice
 
     result = {
         "status": "ok",
@@ -64,6 +68,7 @@ def set_story_metadata(
         "genre": session.genre,
         "style": session.style,
         "world": session.world_description,
+        "narrator_voice": session.narrator_voice,
     }
 
     # Notify frontend

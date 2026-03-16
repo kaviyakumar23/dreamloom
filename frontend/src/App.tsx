@@ -34,7 +34,6 @@ function App() {
     dismissError,
     saveStatus,
     lastDeleted,
-    voiceStyle,
     connect,
     disconnect,
     sendText,
@@ -48,7 +47,6 @@ function App() {
     sendBranch,
     sendActivityStart,
     sendActivityEnd,
-    sendVoiceStyle,
     transcripts,
     collaborators,
     isHost,
@@ -212,13 +210,11 @@ function App() {
               sessionId={story.sessionId}
               kidSafeMode={storyBible.kidSafeMode}
               saveStatus={saveStatus}
-              voiceStyle={voiceStyle}
               collaborators={collaborators}
               onConnect={connect}
               onDisconnect={disconnect}
               onToggleBible={() => setBibleOpen((o) => !o)}
               onToggleKidSafe={() => toggleKidSafe(!storyBible.kidSafeMode)}
-              onVoiceStyleChange={sendVoiceStyle}
             />
 
             {/* Error / reconnecting toast banner */}
@@ -266,37 +262,41 @@ function App() {
               )}
             </AnimatePresence>
 
-            <StoryCanvas
-              story={story}
-              agentSpeaking={agentSpeaking}
-              generationStatus={generationStatus}
-              isMicOn={isMicOn}
-              onRegenerate={sendRegenerate}
-              onDelete={sendDelete}
-              onEditNarration={sendEditNarration}
-              onReorder={sendReorder}
-              onBranch={sendBranch}
-            />
+            {/* When Director's Cut is active, replace the canvas entirely
+                so scene music stops and scenes are hidden. */}
+            {directorsCut ? (
+              <div className="relative flex-1 overflow-y-auto px-3 py-6 sm:px-4 sm:py-8">
+                <DirectorsCut
+                  data={directorsCut}
+                  pages={story.pages}
+                  userId={userId}
+                  sessionId={story.sessionId}
+                  storyTitle={story.title}
+                  storyGenre={story.genre}
+                  storyStyle={story.style}
+                  sendText={sendText}
+                  onClose={() => {/* keep visible */}}
+                />
+              </div>
+            ) : (
+              <StoryCanvas
+                story={story}
+                agentSpeaking={agentSpeaking}
+                generationStatus={generationStatus}
+                isMicOn={isMicOn}
+                onRegenerate={sendRegenerate}
+                onDelete={sendDelete}
+                onEditNarration={sendEditNarration}
+                onReorder={sendReorder}
+                onBranch={sendBranch}
+              />
+            )}
 
             {/* Floating conversation panel for agent speech */}
             <ConversationPanel
               text={story.currentText}
               agentSpeaking={agentSpeaking}
             />
-
-            {/* Director's Cut overlay */}
-            {directorsCut && (
-              <DirectorsCut
-                data={directorsCut}
-                pages={story.pages}
-                userId={userId}
-                sessionId={story.sessionId}
-                storyTitle={story.title}
-                storyGenre={story.genre}
-                storyStyle={story.style}
-                onClose={() => {/* keep visible */}}
-              />
-            )}
 
             {/* Camera preview PiP */}
             <CameraPreview stream={cameraStream} />

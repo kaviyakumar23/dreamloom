@@ -13,7 +13,6 @@ import type {
   StoryBibleData,
   StoryPage,
   StoryState,
-  VoiceStyle,
 } from "../types";
 
 const WS_URL = import.meta.env.VITE_WS_URL || `ws://${window.location.host}/ws`;
@@ -55,7 +54,6 @@ export function useWebSocket() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [lastDeleted, setLastDeleted] = useState<{ page: StoryPage; timer: ReturnType<typeof setTimeout> } | null>(null);
-  const [voiceStyle, setVoiceStyle] = useState<VoiceStyle>("dramatic");
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isHost, setIsHost] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -525,6 +523,11 @@ export function useWebSocket() {
         });
         break;
 
+      case "directors_cut_invalidated":
+        console.log("[WS] Director's Cut invalidated — scenes changed, hiding DC card");
+        setDirectorsCut(null);
+        break;
+
       case "reconnecting": {
         // Server-side Live API reconnection — keep ALL story state intact.
         // This is NOT an error — it's a transient voice connection recovery.
@@ -687,16 +690,6 @@ export function useWebSocket() {
     }
   }, []);
 
-  // Set voice style
-  const sendVoiceStyle = useCallback((style: VoiceStyle) => {
-    setVoiceStyle(style);
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(
-        JSON.stringify({ type: "set_voice_style", style })
-      );
-    }
-  }, []);
-
   // Toggle kid-safe mode
   const toggleKidSafe = useCallback((enabled: boolean) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -759,7 +752,6 @@ export function useWebSocket() {
     dismissError,
     saveStatus,
     lastDeleted,
-    voiceStyle,
     collaborators,
     isHost,
     connect,
@@ -775,7 +767,6 @@ export function useWebSocket() {
     sendBranch,
     sendActivityStart,
     sendActivityEnd,
-    sendVoiceStyle,
     toggleKidSafe,
     setOnAudioData,
     setOnAudioFlush,

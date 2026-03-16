@@ -232,19 +232,21 @@ async def publish_story(request: Request):
         logline = body.get("logline", "")
         body["title"] = logline[:80] if logline else "Untitled Story"
 
-    # Build publish data — strip heavy block data from scenes to stay under
-    # Firestore's 1 MiB document limit.  Keep only text blocks (no images/
-    # binary), and cap narration length.
-    slim_scenes = []
+    # Flatten scenes into Firestore-safe dicts (no nested arrays).
+    # Each scene becomes {narration, image_url} instead of a block array.
+    flat_scenes = []
     for scene_blocks in body.get("scenes", []):
-        slim_blocks = []
+        narration = ""
+        image_url = ""
         for block in (scene_blocks if isinstance(scene_blocks, list) else []):
-            if block.get("type") == "text":
-                content = (block.get("content") or "")[:500]
-                slim_blocks.append({"type": "text", "content": content})
-            elif block.get("type") == "image" and block.get("url"):
-                slim_blocks.append({"type": "image", "url": block["url"]})
-        slim_scenes.append(slim_blocks)
+            if block.get("type") == "text" and block.get("content"):
+                narration += (" " if narration else "") + block["content"]
+            elif block.get("type") == "image" and block.get("url") and not image_url:
+                image_url = block["url"]
+        flat_scenes.append({
+            "narration": narration[:500],
+            "image_url": image_url,
+        })
 
     data = {
         "session_id": body["session_id"],
@@ -256,7 +258,7 @@ async def publish_story(request: Request):
         "cover_url": body.get("cover_url", ""),
         "trailer_text": body.get("trailer_text", ""),
         "scene_count": body.get("scene_count", 0),
-        "scenes": slim_scenes,
+        "scenes": flat_scenes,
         "scene_images": body.get("scene_images", []),
     }
     try:
@@ -912,6 +914,18 @@ async def websocket_endpoint(ws: WebSocket):
         # Inject session_id into agent context
         if resumed and not join_session_id:
             story_context = story_session.get_story_context()
+            has_directors_cut = story_session.directors_cut is not None
+            if has_directors_cut:
+                dc_guidance = (
+                    "The Director's Cut has ALREADY been created — do NOT suggest creating it again. "
+                    "Let the user know their story is complete with a Director's Cut ready, "
+                    "and they can generate a story video or continue adding scenes if they wish."
+                )
+            else:
+                dc_guidance = (
+                    "Ask what they'd like to do next (continue the story, add scenes, "
+                    "create a Director's Cut, etc.)."
+                )
             live_queue.send_content(
                 types.Content(
                     role="user",
@@ -920,8 +934,8 @@ async def websocket_endpoint(ws: WebSocket):
                         f"Kid-safe mode is {'ON' if story_session.kid_safe_mode else 'OFF'}. "
                         f"This is a RESUMED session. The user is returning to an existing story. "
                         f"We already have {story_session.scene_count} scene(s). "
-                        f"Greet the user warmly, reference their story title \"{story_session.title}\", "
-                        f"and ask what they'd like to do next (continue the story, add scenes, create a Director's Cut, etc.).\n\n"
+                        f"Greet the user warmly, reference their story title \"{story_session.title}\". "
+                        f"{dc_guidance}\n\n"
                         f"Story so far:\n{story_context}]"
                     ))],
                 )
@@ -1123,24 +1137,6 @@ async def websocket_endpoint(ws: WebSocket):
                             )
                         )
                         logger.info("Branch requested for scene %s", scene_id)
-
-                elif msg_type == "set_voice_style":
-                    style = data.get("style", "dramatic")
-                    tone_map = {
-                        "dramatic": "Speak in a bold, theatrical, dramatic tone with sweeping descriptions.",
-                        "gentle": "Speak in a soft, warm, gentle bedtime-story tone with tender descriptions.",
-                        "energetic": "Speak in an exciting, fast-paced, energetic tone with vivid action descriptions.",
-                        "mysterious": "Speak in a hushed, suspenseful, mysterious tone with atmospheric descriptions.",
-                    }
-                    tone_prompt = tone_map.get(style, tone_map["dramatic"])
-                    if live_queue:
-                        live_queue.send_content(
-                            types.Content(
-                                role="user",
-                                parts=[types.Part(text=f"[System: The user changed voice style to '{style}'. {tone_prompt}]")],
-                            )
-                        )
-                    logger.info("Voice style set to: %s", style)
 
                 elif msg_type == "end_turn":
                     if live_queue:

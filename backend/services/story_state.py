@@ -41,6 +41,7 @@ class StorySession:
     title: str = "Untitled Story"
     genre: str = ""
     style: str = ""
+    narrator_voice: str = ""
     scenes: list[StoryScene] = field(default_factory=list)
     _deleted_scenes: dict[str, StoryScene] = field(default_factory=dict)
     characters: dict[str, str] = field(default_factory=dict)
@@ -142,9 +143,17 @@ class StorySession:
                 lines.append(f"Loom: {text}")
         return "\n".join(lines)
 
+    def _invalidate_directors_cut(self) -> None:
+        """Clear stale Director's Cut when scenes change."""
+        if self.directors_cut:
+            logger.info("Invalidating Director's Cut — scenes changed")
+            self.directors_cut = None
+            self.notify({"type": "directors_cut_invalidated"})
+
     def add_scene(self, **kwargs: object) -> StoryScene:
         scene = StoryScene(**kwargs)  # type: ignore[arg-type]
         self.scenes.append(scene)
+        self._invalidate_directors_cut()
         return scene
 
     def remove_scene(self, scene_number: int) -> StoryScene | None:
@@ -153,6 +162,7 @@ class StorySession:
         if 0 <= idx < len(self.scenes):
             scene = self.scenes.pop(idx)
             self._deleted_scenes[scene.scene_id] = scene
+            self._invalidate_directors_cut()
             return scene
         return None
 
@@ -162,6 +172,7 @@ class StorySession:
         if scene:
             self.scenes.append(scene)
             self.scenes.sort(key=lambda s: s.timestamp)
+            self._invalidate_directors_cut()
         return scene
 
     def reorder_scenes(self, scene_ids: list[str]) -> bool:
@@ -171,6 +182,7 @@ class StorySession:
         if len(reordered) != len(self.scenes):
             return False
         self.scenes = reordered
+        self._invalidate_directors_cut()
         return True
 
     @property
@@ -190,6 +202,8 @@ class StorySession:
             parts.append(f"Genre: {self.genre}")
         if self.style:
             parts.append(f"Visual Style: {self.style}")
+        if self.narrator_voice:
+            parts.append(f"Narrator Voice: {self.narrator_voice}")
         if self.characters:
             chars = "; ".join(f"{name}: {desc}" for name, desc in self.characters.items())
             parts.append(f"Characters: {chars}")
@@ -204,6 +218,8 @@ class StorySession:
                 summary = f"Scene {idx}: {text}"
                 scene_summaries.append(summary)
             parts.append("Recent scenes:\n" + "\n".join(scene_summaries))
+        if self.directors_cut:
+            parts.append("Director's Cut: ALREADY CREATED (cover image, logline, and scene gallery are ready)")
         return "\n".join(parts) if parts else "No story started yet."
 
     def get_retry_context(self) -> str:
@@ -220,6 +236,8 @@ class StorySession:
             parts.append(f"Genre: {self.genre}")
         if self.style:
             parts.append(f"Visual Style: {self.style}")
+        if self.narrator_voice:
+            parts.append(f"Narrator Voice: {self.narrator_voice}")
         if self.characters:
             chars = "; ".join(f"{name}: {desc}" for name, desc in self.characters.items())
             parts.append(f"Characters: {chars}")
@@ -243,6 +261,8 @@ class StorySession:
                 detail += f": {text}"
                 scene_details.append(detail)
             parts.append("Recent scenes:\n" + "\n\n".join(scene_details))
+        if self.directors_cut:
+            parts.append("Director's Cut: ALREADY CREATED (cover image, logline, and scene gallery are ready)")
         # Include recent conversation so the agent remembers the discussion flow
         recap = self.get_conversation_recap()
         if recap:
@@ -275,6 +295,7 @@ class StorySession:
             "title": self.title,
             "genre": self.genre,
             "style": self.style,
+            "narrator_voice": self.narrator_voice,
             "world_description": self.world_description,
             "characters": self.characters,
             "scenes": scene_summaries,

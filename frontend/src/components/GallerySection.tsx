@@ -7,6 +7,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { PublishedStorySummary, PublishedStoryFull } from "../hooks/useGallery";
 import { StoryViewer } from "./StoryViewer";
 
+const API_BASE = import.meta.env.VITE_API_URL || window.location.origin;
+
+function mediaUrl(url: string): string {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
+  return `${API_BASE}${url.startsWith("/") ? "" : "/"}${url}`;
+}
+
 interface GallerySectionProps {
   stories: PublishedStorySummary[];
   fetchStory: (publishId: string) => Promise<PublishedStoryFull | null>;
@@ -55,7 +63,7 @@ export function GallerySection({ stories, fetchStory }: GallerySectionProps) {
                 <div className="relative aspect-[3/4] w-full overflow-hidden bg-dreamloom-card">
                   {story.cover_url ? (
                     <img
-                      src={story.cover_url}
+                      src={mediaUrl(story.cover_url)}
                       alt={story.title}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />

@@ -295,7 +295,7 @@ export function useAnimatic(options: AnimaticOptions = {}) {
         log(`Step 3 done: ${narrationBuffers.filter(Boolean).length} narrations, ${musicBufferMap.size} music tracks`);
 
         // ── 4. Compute per-scene durations ──
-        // Each scene lasts at least sceneDuration, extended to fit full narration + 1.5s padding
+        const transitionMs = transitionDuration * 1000;
         const minSceneMs = sceneDuration * 1000;
         const sceneDurations = sceneData.map((scene, i) => {
           const narBuf = narrationBuffers[i];
@@ -311,7 +311,6 @@ export function useAnimatic(options: AnimaticOptions = {}) {
 
         const letterboxHeight = 50;
         const titleDurationMs = 3000;
-        const transitionMs = transitionDuration * 1000;
         const endDurationMs = 2000;
 
         const sceneStartOffsets: number[] = [];

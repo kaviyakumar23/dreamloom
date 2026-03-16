@@ -6,6 +6,15 @@ import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import type { PublishedStoryFull } from "../hooks/useGallery";
 
+const API_BASE = import.meta.env.VITE_API_URL || window.location.origin;
+
+/** Resolve media URLs — relative paths get prefixed with API_BASE. */
+function mediaUrl(url: string): string {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
+  return `${API_BASE}${url.startsWith("/") ? "" : "/"}${url}`;
+}
+
 interface StoryViewerProps {
   story: PublishedStoryFull;
   onClose: () => void;
@@ -19,6 +28,19 @@ export function StoryViewer({ story, onClose }: StoryViewerProps) {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
+
+  // Use scene_images (has titles) if available, fall back to scenes
+  const sceneData = (story.scene_images && story.scene_images.length > 0)
+    ? story.scene_images.map((si) => ({
+        title: si.title || "",
+        narration: si.narration || "",
+        imageUrl: si.url || "",
+      }))
+    : (story.scenes || []).map((s) => ({
+        title: "",
+        narration: (s as { narration?: string }).narration || "",
+        imageUrl: (s as { image_url?: string }).image_url || "",
+      }));
 
   return createPortal(
     <motion.div
@@ -50,22 +72,34 @@ export function StoryViewer({ story, onClose }: StoryViewerProps) {
         transition={{ delay: 0.1, duration: 0.4 }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Cover image hero */}
+        {/* Cover image hero with title overlay */}
         {story.cover_url && (
           <div className="relative">
             <img
-              src={story.cover_url}
+              src={mediaUrl(story.cover_url)}
               alt="Story cover"
               className="w-full rounded-t-2xl object-cover"
             />
-            <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_80px_rgba(0,0,0,0.5)]" />
+            {/* Gradient overlay for text readability */}
+            <div className="pointer-events-none absolute inset-0 rounded-t-2xl bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+            {/* Title overlaid on cover */}
+            <div className="absolute bottom-0 left-0 right-0 p-6">
+              <h2 className="font-display text-3xl font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
+                {story.title}
+              </h2>
+              {story.genre && (
+                <span className="mt-2 inline-block rounded-full border border-white/25 bg-white/15 px-3 py-0.5 font-body text-xs text-white backdrop-blur-sm">
+                  {story.genre}
+                </span>
+              )}
+            </div>
           </div>
         )}
 
-        <div className="space-y-6 p-6">
-          {/* Title + genre badge */}
-          <div>
-            <h2 className="font-display text-3xl font-bold text-white">
+        {/* Title fallback when no cover image */}
+        {!story.cover_url && (
+          <div className="p-6 pb-0">
+            <h2 className="font-display text-3xl font-bold text-dreamloom-text">
               {story.title}
             </h2>
             {story.genre && (
@@ -74,42 +108,43 @@ export function StoryViewer({ story, onClose }: StoryViewerProps) {
               </span>
             )}
           </div>
+        )}
 
+        <div className="space-y-6 p-6">
           {/* Logline */}
           {story.logline && (
             <p className="font-display text-lg italic leading-relaxed text-dreamloom-text/80">
-              "{story.logline}"
+              &ldquo;{story.logline}&rdquo;
             </p>
           )}
 
-          {/* Scene blocks */}
-          {story.scenes && story.scenes.length > 0 && (
+          {/* Scene cards */}
+          {sceneData.length > 0 && (
             <div className="space-y-8">
-              {story.scenes.map((blocks, sceneIdx) => (
-                <div key={sceneIdx} className="space-y-3">
-                  <p className="font-body text-[11px] uppercase tracking-[0.25em] text-dreamloom-gold/70">
-                    Scene {sceneIdx + 1}
-                  </p>
-                  {(Array.isArray(blocks) ? blocks : []).map((block, blockIdx) => {
-                    if (block.type === "text" && block.content) {
-                      return (
-                        <p key={blockIdx} className="font-body text-sm leading-relaxed text-dreamloom-text/85">
-                          {block.content}
-                        </p>
-                      );
-                    }
-                    if (block.type === "image" && block.url) {
-                      return (
-                        <img
-                          key={blockIdx}
-                          src={block.url}
-                          alt={`Scene ${sceneIdx + 1}`}
-                          className="w-full rounded-xl"
-                        />
-                      );
-                    }
-                    return null;
-                  })}
+              {sceneData.map((scene, idx) => (
+                <div key={idx} className="space-y-3">
+                  <div className="flex items-baseline gap-3">
+                    <p className="font-body text-[11px] uppercase tracking-[0.25em] text-dreamloom-gold/70">
+                      Scene {idx + 1}
+                    </p>
+                    {scene.title && (
+                      <p className="font-display text-sm font-medium text-dreamloom-text/70">
+                        {scene.title}
+                      </p>
+                    )}
+                  </div>
+                  {scene.imageUrl && (
+                    <img
+                      src={mediaUrl(scene.imageUrl)}
+                      alt={scene.title || `Scene ${idx + 1}`}
+                      className="w-full rounded-xl"
+                    />
+                  )}
+                  {scene.narration && (
+                    <p className="font-body text-sm leading-relaxed text-dreamloom-text/85">
+                      {scene.narration}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

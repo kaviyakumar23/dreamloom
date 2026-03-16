@@ -38,6 +38,7 @@ export type ServerMessageType =
   | "transcription"
   | "collaborator_joined"
   | "collaborator_left"
+  | "directors_cut_invalidated"
   | "error";
 
 export interface ServerMessage {
@@ -212,16 +213,6 @@ export type ConnectionStatus = "disconnected" | "connecting" | "connected" | "re
 
 /** Auto-save indicator status. */
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
-
-/** Voice style for the director persona. */
-export type VoiceStyle = "dramatic" | "gentle" | "energetic" | "mysterious";
-
-export const VOICE_STYLES: Array<{ value: VoiceStyle; label: string; description: string }> = [
-  { value: "dramatic", label: "Dramatic", description: "Bold, theatrical storytelling" },
-  { value: "gentle", label: "Gentle", description: "Soft, warm bedtime-story tone" },
-  { value: "energetic", label: "Energetic", description: "Fast-paced, exciting delivery" },
-  { value: "mysterious", label: "Mysterious", description: "Hushed, suspenseful narration" },
-];
 
 /** A connected collaborator. */
 export interface Collaborator {

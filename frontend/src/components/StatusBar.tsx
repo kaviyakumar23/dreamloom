@@ -2,23 +2,19 @@
  * StatusBar — top bar with connection status, kid-safe toggle, and story bible toggle.
  * Restyled to match the landing page's teal/coral visual language.
  */
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import type { Collaborator, ConnectionStatus, SaveStatus, VoiceStyle } from "../types";
-import { VOICE_STYLES } from "../types";
+import { motion } from "framer-motion";
+import type { Collaborator, ConnectionStatus, SaveStatus } from "../types";
 
 interface StatusBarProps {
   connectionStatus: ConnectionStatus;
   sessionId: string;
   kidSafeMode: boolean;
   saveStatus?: SaveStatus;
-  voiceStyle?: VoiceStyle;
   collaborators?: Collaborator[];
   onConnect: () => void;
   onDisconnect: () => void;
   onToggleBible: () => void;
   onToggleKidSafe: () => void;
-  onVoiceStyleChange?: (style: VoiceStyle) => void;
 }
 
 export function StatusBar({
@@ -26,16 +22,12 @@ export function StatusBar({
   sessionId,
   kidSafeMode,
   saveStatus,
-  voiceStyle = "dramatic",
   collaborators = [],
   onConnect,
   onDisconnect,
   onToggleBible,
   onToggleKidSafe,
-  onVoiceStyleChange,
 }: StatusBarProps) {
-  const [voicePickerOpen, setVoicePickerOpen] = useState(false);
-  const currentStyleLabel = VOICE_STYLES.find((s) => s.value === voiceStyle)?.label || "Dramatic";
   const statusConfig: Record<
     ConnectionStatus,
     { color: string; label: string }
@@ -95,50 +87,6 @@ export function StatusBar({
           <span className="hidden sm:inline">{kidSafeMode ? "Kid-Safe" : "Mature"}</span>
           <span className="sm:hidden">{kidSafeMode ? "KS" : "18+"}</span>
         </button>
-
-        {/* Voice style picker */}
-        {onVoiceStyleChange && (
-          <div className="relative hidden sm:block">
-            <button
-              onClick={() => setVoicePickerOpen((o) => !o)}
-              aria-expanded={voicePickerOpen}
-              aria-label="Voice style"
-              className="rounded-lg border border-[#9fc7c3]/60 bg-[#f8fcfc]/70 px-3 py-1.5 font-body text-sm font-medium text-dreamloom-text/80 transition-colors hover:border-dreamloom-accent/60 hover:text-dreamloom-accent"
-              title="Voice style"
-            >
-              {currentStyleLabel}
-            </button>
-            <AnimatePresence>
-              {voicePickerOpen && (
-                <motion.div
-                  className="absolute right-0 top-full z-50 mt-2 w-52 rounded-xl border border-[#9fc7c3]/60 bg-[#f7fcfb]/95 p-2 shadow-2xl backdrop-blur-xl"
-                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  {VOICE_STYLES.map((s) => (
-                    <button
-                      key={s.value}
-                      onClick={() => {
-                        onVoiceStyleChange(s.value);
-                        setVoicePickerOpen(false);
-                      }}
-                      className={`flex w-full flex-col rounded-lg px-3 py-2 text-left transition-colors ${
-                        voiceStyle === s.value
-                          ? "bg-dreamloom-accent/15 text-dreamloom-accent"
-                          : "text-dreamloom-text/75 hover:bg-[#eaf4f2] hover:text-dreamloom-text"
-                      }`}
-                    >
-                      <span className="font-body text-sm font-medium">{s.label}</span>
-                      <span className="font-body text-xs text-dreamloom-muted">{s.description}</span>
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
 
         {/* Collaborators */}
         {collaborators.length > 1 && (

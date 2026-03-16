@@ -121,12 +121,15 @@ EOF
 echo "   VITE_WS_URL=${WS_URL}"
 echo "   VITE_API_URL=${BACKEND_URL}"
 
+# Ensure .env.production is cleaned up even if the build fails
+cleanup_env() { rm -f "$(cd -- "$(dirname "$0")/.." && pwd)/frontend/.env.production" 2>/dev/null; }
+trap cleanup_env EXIT
+
 gcloud builds submit \
   --tag "${FRONTEND_IMAGE}" \
   --project="${PROJECT_ID}" \
   .
 
-# Clean up .env.production after build
 rm -f .env.production
 cd ..
 
@@ -147,20 +150,44 @@ gcloud run deploy "${FRONTEND_SERVICE}" \
 
 FRONTEND_URL=$(gcloud run services describe "${FRONTEND_SERVICE}" \
   --region="${REGION}" --project="${PROJECT_ID}" \
-  --format="value(status.url)")
+  --format="value(status.url)" 2>/dev/null) || true
 
-# Update backend CORS with frontend URL
-echo ""
-echo ">> Updating backend CORS..."
-gcloud run services update "${BACKEND_SERVICE}" \
-  --region="${REGION}" --project="${PROJECT_ID}" \
-  --update-env-vars="^||^CORS_ORIGINS=${FRONTEND_URL},http://localhost:5173" \
-  --quiet
+if [ -z "${FRONTEND_URL}" ]; then
+  echo "WARNING: Could not retrieve frontend URL. CORS update skipped."
+  echo "   Run manually after the service is ready:"
+  echo "   gcloud run services update ${BACKEND_SERVICE} --region=${REGION} --project=${PROJECT_ID} \\"
+  echo "     --update-env-vars='^||^CORS_ORIGINS=<FRONTEND_URL>,http://localhost:5173'"
+else
+  # Update backend CORS with frontend URL + custom domain (non-fatal)
+  CUSTOM_DOMAIN="${CUSTOM_DOMAIN:-}"
+  CORS_ORIGINS="${FRONTEND_URL},http://localhost:5173"
+  if [ -n "${CUSTOM_DOMAIN}" ]; then
+    CORS_ORIGINS="${CORS_ORIGINS},${CUSTOM_DOMAIN}"
+  fi
+
+  echo ""
+  echo ">> Updating backend CORS..."
+  if gcloud run services update "${BACKEND_SERVICE}" \
+    --region="${REGION}" --project="${PROJECT_ID}" \
+    --update-env-vars="^||^CORS_ORIGINS=${CORS_ORIGINS}" \
+    --quiet 2>&1; then
+    echo "   CORS origins: ${CORS_ORIGINS}"
+  else
+    echo "WARNING: CORS update failed (non-fatal). Update manually:"
+    echo "   gcloud run services update ${BACKEND_SERVICE} --region=${REGION} --project=${PROJECT_ID} \\"
+    echo "     --update-env-vars='^||^CORS_ORIGINS=${CORS_ORIGINS}'"
+  fi
+fi
 
 echo ""
 echo "=== Deployment Complete ==="
-echo "Frontend: ${FRONTEND_URL}"
+echo "Frontend: ${FRONTEND_URL:-<pending>}"
 echo "Backend:  ${BACKEND_URL}"
+if [ -n "${CUSTOM_DOMAIN:-}" ]; then
+  echo "Domain:   ${CUSTOM_DOMAIN}"
+fi
 echo "Bucket:   gs://${BUCKET_NAME}"
 echo ""
-echo "Open ${FRONTEND_URL} to start creating stories!"
+if [ -n "${FRONTEND_URL}" ]; then
+  echo "Open ${FRONTEND_URL} to start creating stories!"
+fi

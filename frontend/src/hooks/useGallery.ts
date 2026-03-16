@@ -18,7 +18,7 @@ export interface PublishedStorySummary {
 export interface PublishedStoryFull extends PublishedStorySummary {
   style: string;
   trailer_text: string;
-  scenes: Array<{ type: string; content?: string; url?: string }[]>;
+  scenes: Array<{ narration: string; image_url: string }>;
   scene_images: Array<{ url: string; narration: string; title: string }>;
 }
 

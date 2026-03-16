@@ -2,13 +2,11 @@
  * DirectorsCut — cinematic finale card for the Director's Cut package.
  * Cover image, logline, downloadable video, and scene gallery.
  */
-import { useRef } from "react";
 import { motion } from "framer-motion";
 import type { DirectorsCutData, StoryPage } from "../types";
 import { useAnimatic } from "../hooks/useAnimatic";
 import { useExport } from "../hooks/useExport";
 import { PublishButton } from "./PublishButton";
-import { fetchTTS } from "../services/tts";
 
 interface DirectorsCutProps {
   data: DirectorsCutData;
@@ -18,13 +16,13 @@ interface DirectorsCutProps {
   storyTitle?: string;
   storyGenre?: string;
   storyStyle?: string;
+  sendText?: (text: string) => void;
   onClose: () => void;
 }
 
-export function DirectorsCut({ data, pages, userId, sessionId, storyTitle, storyGenre, storyStyle }: DirectorsCutProps) {
+export function DirectorsCut({ data, pages, userId, sessionId, storyTitle, storyGenre, storyStyle, sendText }: DirectorsCutProps) {
   const { generate, generating, progress, blobUrl } = useAnimatic();
-  const { exportToPdf, exportToImage, exporting } = useExport();
-  const contentRef = useRef<HTMLDivElement>(null);
+  const { exportToPdf, exportImages, exporting } = useExport();
 
   const handleGenerateAnimatic = () => {
     console.log("[DirectorsCut] Generate video clicked");
@@ -33,20 +31,10 @@ export function DirectorsCut({ data, pages, userId, sessionId, storyTitle, story
       console.log(`[DirectorsCut]   Page ${i + 1}: scene=${p.sceneNumber}, title="${p.title}", image=${p.imageUrl ? "YES" : "NO"}, music=${p.musicUrl || "none"}, narration=${(p.narration || "").length} chars, blocks=${p.blocks.length}`);
     });
 
-    // Voice announcement so the user knows to wait
-    fetchTTS(
-      "Generating your story video now. This may take a minute, sit back and enjoy the wait!",
-    ).then((wav) => {
-      if (!wav) return;
-      const ctx = new AudioContext();
-      ctx.decodeAudioData(wav.slice(0)).then((buf) => {
-        const src = ctx.createBufferSource();
-        src.buffer = buf;
-        src.connect(ctx.destination);
-        src.start();
-        src.onended = () => ctx.close().catch(() => {});
-      }).catch(() => ctx.close().catch(() => {}));
-    });
+    // Ask Loom to announce video generation in its natural voice
+    sendText?.(
+      "[System: The user just clicked 'Generate Story Video'. Say a brief, excited one-liner about how you're assembling their story video and it'll take a moment. Keep it short and natural — one sentence max.]"
+    );
 
     generate(pages);
   };
@@ -59,7 +47,6 @@ export function DirectorsCut({ data, pages, userId, sessionId, storyTitle, story
       transition={{ duration: 0.8, ease: "easeOut" }}
     >
       <div
-        ref={contentRef}
         className="relative overflow-hidden rounded-2xl border border-[#7eb7bc]/55 bg-gradient-to-b from-[#103246] via-[#1a4860] to-[#1f5a73]"
       >
         {/* Film grain overlay */}
@@ -169,18 +156,26 @@ export function DirectorsCut({ data, pages, userId, sessionId, storyTitle, story
             transition={{ delay: 1.1 }}
           >
             <button
-              onClick={() => exportToPdf(contentRef, data.logline || "DreamLoom Story")}
+              onClick={() => exportToPdf(pages, storyTitle || "DreamLoom Story", data.coverUrl, data.logline)}
               disabled={exporting}
-              className="rounded-lg border border-[#8bc3c3]/55 bg-[#13384d]/55 px-4 py-2 font-body text-sm text-[#e7f3f5] transition-colors hover:bg-[#17445a]/70 disabled:opacity-40"
+              className="flex items-center gap-2 rounded-lg border border-[#8bc3c3]/55 bg-[#13384d]/55 px-4 py-2 font-body text-sm text-[#e7f3f5] transition-colors hover:bg-[#17445a]/70 disabled:opacity-40"
             >
-              {exporting ? "Exporting..." : "Export PDF"}
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
+              </svg>
+              {exporting ? "Exporting..." : "Storybook PDF"}
             </button>
             <button
-              onClick={() => exportToImage(contentRef, data.logline || "DreamLoom Story")}
+              onClick={() => exportImages(pages, storyTitle || "DreamLoom Story")}
               disabled={exporting}
-              className="rounded-lg border border-[#7fb7bc]/45 bg-[#1a465d]/45 px-4 py-2 font-body text-sm text-[#d0e5ea] transition-colors hover:bg-[#23536b]/55 disabled:opacity-40"
+              className="flex items-center gap-2 rounded-lg border border-[#7fb7bc]/45 bg-[#1a465d]/45 px-4 py-2 font-body text-sm text-[#d0e5ea] transition-colors hover:bg-[#23536b]/55 disabled:opacity-40"
             >
-              {exporting ? "Exporting..." : "Export Image"}
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              {exporting ? "Exporting..." : "Export Images (.zip)"}
             </button>
             {userId && sessionId && (
               <PublishButton
