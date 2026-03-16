@@ -279,9 +279,9 @@ gcloud run deploy dreamloom-backend \
 
 DreamLoom uses a **two-model architecture**: the **Conversation Model** (Gemini Live API via ADK `run_live()`) handles real-time bidirectional voice with barge-in detection, while the **Scene Model** (Gemini interleaved output) generates text+image scenes in a single API response. A single Director Agent named Loom bridges the two through six callable tools — `create_scene` dispatches to the interleaved model, `generate_music` streams from Lyria RealTime, and `create_directors_cut` assembles the finale. User voice (16 kHz PCM) and camera frames flow over a persistent WebSocket to the backend on Cloud Run; generated scenes, agent voice (24 kHz PCM), music URLs, and story state updates flow back over the same connection. Media assets are stored in GCS, sessions persist in Firestore with graceful degradation, and exports (Storybook PDF, image ZIP, WebM animatic) are assembled entirely client-side.
 
-![Architecture Diagram](docs/architecture.png)
+![Architecture Diagram](Dreamloom%20architecture.png)
 
-> Editable source: [`docs/architecture.mmd`](docs/architecture.mmd) — render with `npx @mermaid-js/mermaid-cli -i docs/architecture.mmd -o docs/architecture.png`
+> Editable source: [`architecture.mmd`](architecture.mmd) | Detailed version: [`docs/architecture.mmd`](docs/architecture.mmd)
 
 ### Diagram Legend
 
