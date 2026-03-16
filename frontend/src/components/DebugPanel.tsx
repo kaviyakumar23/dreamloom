@@ -2,16 +2,28 @@
  * DebugPanel — collapsible "Under the Hood" panel showing interleaved proof.
  * Shows model name, response_modalities, part order, and generation time.
  */
+import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { SceneMetadata } from "../types";
 
+interface TranscriptEntry {
+  source: "user" | "agent";
+  text: string;
+  timestamp: number;
+}
+
 interface DebugPanelProps {
   metadata?: SceneMetadata;
+  transcripts?: TranscriptEntry[];
   isOpen: boolean;
   onToggle: () => void;
 }
 
-export function DebugPanel({ metadata, isOpen, onToggle }: DebugPanelProps) {
+export function DebugPanel({ metadata, transcripts = [], isOpen, onToggle }: DebugPanelProps) {
+  const transcriptEndRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [transcripts.length]);
   return (
     <div className="fixed bottom-20 right-3 z-30 sm:right-4">
       {/* Toggle button */}
@@ -71,6 +83,30 @@ export function DebugPanel({ metadata, isOpen, onToggle }: DebugPanelProps) {
                 <p className="font-body text-sm text-dreamloom-muted">
                   Generate a scene to see model details...
                 </p>
+              </div>
+            )}
+
+            {/* Transcript Log */}
+            {transcripts.length > 0 && (
+              <div className="border-t border-white/10">
+                <div className="px-4 py-2">
+                  <p className="font-body text-xs font-medium text-dreamloom-muted uppercase tracking-wider">Transcript Log</p>
+                </div>
+                <div className="max-h-40 overflow-y-auto px-4 pb-3 space-y-1">
+                  {transcripts.slice(-10).map((t, i) => {
+                    const time = new Date(t.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+                    return (
+                      <p key={i} className="font-mono text-xs leading-relaxed">
+                        <span className="text-dreamloom-muted">[{time}]</span>{" "}
+                        <span className={t.source === "user" ? "text-dreamloom-accent-light" : "text-dreamloom-gold"}>
+                          {t.source === "user" ? "User" : "Loom"}:
+                        </span>{" "}
+                        <span className="text-dreamloom-text/80">{t.text}</span>
+                      </p>
+                    );
+                  })}
+                  <div ref={transcriptEndRef} />
+                </div>
               </div>
             )}
           </motion.div>

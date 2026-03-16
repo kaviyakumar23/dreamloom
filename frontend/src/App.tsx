@@ -46,7 +46,10 @@ function App() {
     sendEditNarration,
     sendReorder,
     sendBranch,
+    sendActivityStart,
+    sendActivityEnd,
     sendVoiceStyle,
+    transcripts,
     collaborators,
     isHost,
     toggleKidSafe,
@@ -308,6 +311,8 @@ function App() {
               onToggleCamera={toggleCamera}
               onVolumeChange={updateVolume}
               onSendText={sendText}
+              onActivityStart={sendActivityStart}
+              onActivityEnd={sendActivityEnd}
             />
 
             {/* Story Bible drawer */}
@@ -338,6 +343,7 @@ function App() {
             {/* Debug panel */}
             <DebugPanel
               metadata={latestMetadata}
+              transcripts={transcripts}
               isOpen={debugOpen}
               onToggle={() => setDebugOpen((o) => !o)}
             />

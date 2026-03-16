@@ -35,6 +35,7 @@ export type ServerMessageType =
   | "scene_deleted"
   | "scene_restored"
   | "reconnecting"
+  | "transcription"
   | "collaborator_joined"
   | "collaborator_left"
   | "error";

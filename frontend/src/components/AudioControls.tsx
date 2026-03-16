@@ -19,6 +19,8 @@ interface AudioControlsProps {
   onToggleCamera: () => void;
   onVolumeChange: (v: number) => void;
   onSendText: (text: string) => void;
+  onActivityStart?: () => void;
+  onActivityEnd?: () => void;
 }
 
 export function AudioControls({
@@ -34,8 +36,11 @@ export function AudioControls({
   onToggleCamera,
   onVolumeChange,
   onSendText,
+  onActivityStart,
+  onActivityEnd,
 }: AudioControlsProps) {
   const isConnected = connectionStatus === "connected";
+  const [isPTT, setIsPTT] = useState(false);
 
   // Brief "Interrupted" flash — shown for 800ms after barge-in
   const [wasInterrupted, setWasInterrupted] = useState(false);
@@ -57,9 +62,12 @@ export function AudioControls({
         <div className="flex items-center gap-3">
           {/* Microphone button */}
           <motion.button
-            onClick={onToggleMic}
+            onClick={isPTT ? undefined : onToggleMic}
+            onPointerDown={isPTT && isConnected && isHost ? () => { onToggleMic(); onActivityStart?.(); } : undefined}
+            onPointerUp={isPTT && isConnected && isHost ? () => { onActivityEnd?.(); onToggleMic(); } : undefined}
+            onPointerLeave={isPTT && isMicOn ? () => { onActivityEnd?.(); onToggleMic(); } : undefined}
             disabled={!isConnected || !isHost}
-            aria-label={!isHost ? "Microphone (viewer mode)" : isMicOn ? "Mute microphone" : "Unmute microphone"}
+            aria-label={!isHost ? "Microphone (viewer mode)" : isPTT ? "Hold to talk" : isMicOn ? "Mute microphone" : "Unmute microphone"}
             aria-pressed={isMicOn}
             className={`relative flex h-12 w-12 items-center justify-center rounded-full transition-all ${
               isMicOn
@@ -78,6 +86,21 @@ export function AudioControls({
               />
             )}
           </motion.button>
+
+          {/* PTT toggle */}
+          <button
+            onClick={() => setIsPTT((v) => !v)}
+            disabled={!isConnected || !isHost}
+            aria-label={isPTT ? "Switch to auto voice detection" : "Switch to push-to-talk"}
+            title={isPTT ? "PTT on — hold mic to talk" : "PTT off — auto voice detection"}
+            className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all ${
+              isPTT
+                ? "bg-dreamloom-accent/30 text-dreamloom-accent-light border border-dreamloom-accent/50"
+                : "bg-dreamloom-card/50 text-dreamloom-muted border border-white/5 hover:border-white/15"
+            } disabled:opacity-40 disabled:cursor-not-allowed`}
+          >
+            PTT
+          </button>
 
           {/* Camera button */}
           <motion.button

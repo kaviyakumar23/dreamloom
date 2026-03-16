@@ -59,6 +59,7 @@ export function useWebSocket() {
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isHost, setIsHost] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [transcripts, setTranscripts] = useState<Array<{source: "user"|"agent"; text: string; timestamp: number}>>([]);
 
   const triggerSaveIndicator = useCallback(() => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -297,6 +298,18 @@ export function useWebSocket() {
         // Flush audio queue so old speech stops immediately
         onAudioFlushRef.current?.();
         break;
+
+      case "transcription": {
+        const isFinal = msg.final as boolean;
+        if (isFinal && (msg.text as string).trim()) {
+          setTranscripts(prev => [...prev.slice(-49), {
+            source: msg.source as "user" | "agent",
+            text: msg.text as string,
+            timestamp: Date.now(),
+          }]);
+        }
+        break;
+      }
 
       case "generating":
         setGenerationStatus({
@@ -651,6 +664,18 @@ export function useWebSocket() {
     }
   }, []);
 
+  // Manual turn control (push-to-talk)
+  const sendActivityStart = useCallback(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type: "activity_start" }));
+    }
+  }, []);
+  const sendActivityEnd = useCallback(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type: "activity_end" }));
+    }
+  }, []);
+
   // Set voice style
   const sendVoiceStyle = useCallback((style: VoiceStyle) => {
     setVoiceStyle(style);
@@ -716,6 +741,7 @@ export function useWebSocket() {
     agentSpeaking,
     generationStatus,
     isProcessing,
+    transcripts,
     storyBible,
     directorsCut,
     error,
@@ -736,6 +762,8 @@ export function useWebSocket() {
     sendEditNarration,
     sendReorder,
     sendBranch,
+    sendActivityStart,
+    sendActivityEnd,
     sendVoiceStyle,
     toggleKidSafe,
     setOnAudioData,

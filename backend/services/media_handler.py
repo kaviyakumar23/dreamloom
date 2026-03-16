@@ -73,7 +73,7 @@ class MediaHandler:
         return self.save_media(data, media_type, extension, session_id)
 
     def _save_to_gcs(self, data: bytes, path: str, media_type: str, extension: str) -> str:
-        """Upload to GCS and return public URL."""
+        """Upload to GCS and return public URL. Falls back to local on failure."""
         content_types = {
             ("image", "png"): "image/png",
             ("image", "jpeg"): "image/jpeg",
@@ -84,10 +84,14 @@ class MediaHandler:
         }
         content_type = content_types.get((media_type, extension), "application/octet-stream")
 
-        blob = self._bucket.blob(f"dreamloom/{path}")
-        blob.upload_from_string(data, content_type=content_type)
-        blob.make_public()
-        return blob.public_url
+        try:
+            blob = self._bucket.blob(f"dreamloom/{path}")
+            blob.upload_from_string(data, content_type=content_type)
+            blob.make_public()
+            return blob.public_url
+        except Exception as e:
+            logger.warning("GCS upload failed, falling back to local storage: %s", e)
+            return self._save_local(data, path)
 
     def _save_local(self, data: bytes, path: str) -> str:
         """Save locally and return a local URL."""

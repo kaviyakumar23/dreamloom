@@ -21,8 +21,7 @@ interface StoryCanvasProps {
   onBranch?: (sceneId: string) => void;
 }
 
-export function StoryCanvas({ story, agentSpeaking: _agentSpeaking, generationStatus, isMicOn, onRegenerate, onDelete, onEditNarration, onReorder, onBranch }: StoryCanvasProps) {
-  void _agentSpeaking;
+export function StoryCanvas({ story, agentSpeaking, generationStatus, isMicOn, onRegenerate, onDelete, onEditNarration, onReorder, onBranch }: StoryCanvasProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -60,18 +59,29 @@ export function StoryCanvas({ story, agentSpeaking: _agentSpeaking, generationSt
     if (currentMusicUrlRef.current !== currentMusic.url) {
       currentMusicUrlRef.current = currentMusic.url;
       audio.src = currentMusic.url;
-      audio.volume = isMicOn ? 0.0 : 0.25;
+      audio.volume = isMicOn ? 0.0 : (agentSpeaking ? 0.10 : 0.25);
       audio.load();
       audio.play().catch(() => {});
     }
   }, [currentMusic]);
 
-  // Duck music volume when mic is active so it doesn't bleed into voice stream
+  // 3-tier music ducking: mic on → 0, agent speaking → 0.10, idle → 0.25
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.volume = isMicOn ? 0.0 : 0.25;
-  }, [isMicOn]);
+    const target = isMicOn ? 0.0 : agentSpeaking ? 0.10 : 0.25;
+    const start = audio.volume;
+    const diff = target - start;
+    if (Math.abs(diff) < 0.01) { audio.volume = target; return; }
+    const steps = 12;
+    let step = 0;
+    const id = setInterval(() => {
+      step++;
+      audio.volume = Math.max(0, Math.min(1, start + (diff * step / steps)));
+      if (step >= steps) { audio.volume = target; clearInterval(id); }
+    }, 16);
+    return () => clearInterval(id);
+  }, [isMicOn, agentSpeaking]);
 
   const hasContent = story.pages.length > 0 || story.currentText;
 

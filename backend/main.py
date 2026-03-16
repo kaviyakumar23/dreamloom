@@ -490,11 +490,38 @@ async def websocket_endpoint(ws: WebSocket):
         """
         nonlocal live_queue, adk_session
 
-        live_run_config = RunConfig(response_modalities=["AUDIO"])
+        start_sens = (types.StartSensitivity.START_SENSITIVITY_HIGH
+                      if config.vad_start_sensitivity == "HIGH"
+                      else types.StartSensitivity.START_SENSITIVITY_LOW)
+        end_sens = (types.EndSensitivity.END_SENSITIVITY_HIGH
+                    if config.vad_end_sensitivity == "HIGH"
+                    else types.EndSensitivity.END_SENSITIVITY_LOW)
+
+        live_run_config = RunConfig(
+            response_modalities=["AUDIO"],
+            input_audio_transcription=types.AudioTranscriptionConfig(),
+            output_audio_transcription=types.AudioTranscriptionConfig(),
+            realtime_input_config=types.RealtimeInputConfig(
+                automatic_activity_detection=types.AutomaticActivityDetection(
+                    disabled=False,
+                    start_of_speech_sensitivity=start_sens,
+                    end_of_speech_sensitivity=end_sens,
+                    prefix_padding_ms=config.vad_prefix_padding_ms,
+                    silence_duration_ms=config.vad_silence_duration_ms,
+                ),
+            ),
+            proactivity=types.ProactivityConfig(
+                proactive_audio=True,
+            ),
+        )
         max_retries = 5
         # When True, suppress agent output until its first turn completes.
         # This prevents the re-introduction greeting after a reconnect.
         mute_until_turn_complete = False
+        # False-interruption recovery state
+        last_agent_transcript = ""
+        interruption_verify_task = None
+        user_spoke_flag = asyncio.Event()
         logger.info("Response handler started for session %s", session_id)
 
         for attempt in range(1, max_retries + 1):
@@ -507,6 +534,7 @@ async def websocket_endpoint(ws: WebSocket):
                 ):
                     # Handle turn completion
                     if event.turn_complete:
+                        last_agent_transcript = ""
                         if mute_until_turn_complete:
                             mute_until_turn_complete = False
                             logger.info("Reconnect greeting suppressed, agent ready for user input")
@@ -522,11 +550,73 @@ async def websocket_endpoint(ws: WebSocket):
                         else:
                             await connection_manager.broadcast(session_id, {"type": "turn_complete"})
 
-                    # Handle interrupted (barge-in)
+                    # Input transcription (user speech -> text)
+                    if event.input_transcription and event.input_transcription.text:
+                        tx = event.input_transcription.text
+                        is_final = event.input_transcription.finished
+                        logger.info("User transcript%s: %s", " (final)" if is_final else "", tx[:200])
+                        if tx.strip():
+                            user_spoke_flag.set()
+                        if not mute_until_turn_complete:
+                            await connection_manager.broadcast(session_id, {
+                                "type": "transcription", "source": "user",
+                                "text": tx, "final": is_final,
+                            })
+                        if is_final and tx.strip():
+                            story_session.record_conversation("user", tx)
+
+                    # Output transcription (agent speech -> text)
+                    if event.output_transcription and event.output_transcription.text:
+                        tx = event.output_transcription.text
+                        is_final = event.output_transcription.finished
+                        last_agent_transcript += tx
+                        logger.info("Agent transcript%s: %s", " (final)" if is_final else "", tx[:200])
+                        if not mute_until_turn_complete:
+                            await connection_manager.broadcast(session_id, {
+                                "type": "transcription", "source": "agent",
+                                "text": tx, "final": is_final,
+                            })
+                        if is_final and tx.strip():
+                            story_session.record_conversation("assistant", tx)
+
+                    # Handle interrupted (barge-in) with false-interruption recovery
                     if event.interrupted:
                         logger.info("Agent interrupted (barge-in)")
                         if not mute_until_turn_complete:
                             await connection_manager.broadcast(session_id, {"type": "interrupted"})
+
+                        interrupted_text = last_agent_transcript
+                        last_agent_transcript = ""
+                        user_spoke_flag.clear()
+
+                        # Cancel any pending verification
+                        if interruption_verify_task and not interruption_verify_task.done():
+                            interruption_verify_task.cancel()
+
+                        async def verify_interruption(
+                            _interrupted_text=interrupted_text,
+                        ):
+                            try:
+                                await asyncio.wait_for(user_spoke_flag.wait(), timeout=0.4)
+                                logger.info("Interruption confirmed by user speech")
+                            except asyncio.TimeoutError:
+                                if not _interrupted_text:
+                                    return
+                                logger.info("False interruption detected — resuming")
+                                resume_hint = _interrupted_text[-150:] if len(_interrupted_text) > 150 else _interrupted_text
+                                try:
+                                    live_queue.send_content(types.Content(
+                                        role="user",
+                                        parts=[types.Part(text=(
+                                            f"[System: That was a false interruption (background noise, not the user). "
+                                            f"Continue speaking naturally from where you left off. "
+                                            f'You were saying: "{resume_hint}"]'
+                                        ))],
+                                    ))
+                                except Exception:
+                                    pass
+
+                        interruption_verify_task = asyncio.create_task(verify_interruption())
 
                     # Handle content parts
                     if not event.content or not event.content.parts:
@@ -1034,6 +1124,16 @@ async def websocket_endpoint(ws: WebSocket):
                                 parts=[types.Part(text="[User ended turn]")],
                             )
                         )
+
+                elif msg_type == "activity_start":
+                    if live_queue:
+                        live_queue.send_activity_start()
+                        logger.debug("Manual activity_start signal sent")
+
+                elif msg_type == "activity_end":
+                    if live_queue:
+                        live_queue.send_activity_end()
+                        logger.debug("Manual activity_end signal sent")
 
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected: session=%s", session_id)

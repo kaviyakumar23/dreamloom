@@ -19,6 +19,12 @@ class Config:
     conversation_model: str = "gemini-2.5-flash-native-audio-latest"
     music_model: str = "models/lyria-realtime-exp"
 
+    # VAD tuning
+    vad_start_sensitivity: str = "LOW"
+    vad_end_sensitivity: str = "LOW"
+    vad_prefix_padding_ms: int = 300
+    vad_silence_duration_ms: int = 1200
+
     # Server
     host: str = "0.0.0.0"
     port: int = 8000
@@ -41,6 +47,11 @@ class Config:
             scene_model=os.getenv("SCENE_MODEL", "gemini-2.5-flash-image"),
             conversation_model=os.getenv("CONVERSATION_MODEL", "gemini-2.5-flash-native-audio-latest"),
             music_model=os.getenv("MUSIC_MODEL", "models/lyria-realtime-exp"),
+
+            vad_start_sensitivity=os.getenv("VAD_START_SENSITIVITY", "LOW"),
+            vad_end_sensitivity=os.getenv("VAD_END_SENSITIVITY", "LOW"),
+            vad_prefix_padding_ms=int(os.getenv("VAD_PREFIX_PADDING_MS", "300")),
+            vad_silence_duration_ms=int(os.getenv("VAD_SILENCE_DURATION_MS", "1200")),
 
             host=os.getenv("HOST", "0.0.0.0"),
             port=int(os.getenv("PORT", "8000")),
